@@ -1,3 +1,3 @@
 # Update_Blocklist
 
-aktualisiert die IP-Blocklist im Synology DSM
+aktualisiert / importiert von [blocklist.de](http://www.blocklist.de/de/index.html) gesperrte IPs in die IP-Blocklist im Synology DSM
