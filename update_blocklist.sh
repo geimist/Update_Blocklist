@@ -25,6 +25,11 @@ LOGLEVEL=1
 ############################################################################################################### 
 
 # CREATE TABLE AutoBlockIP(IP varchar(50) PRIMARY KEY,RecordTime date NOT NULL,ExpireTime date NOT NULL,Deny boolean NOT NULL,IPStd varchr(50) NOT NULL,Type INTEGER,Meta varchar(256))
+if [ $(whoami) != "root" ]; then
+    echo "WARNING: this script must run from root!" >&2
+    exit 1
+fi
+
 countadded=0
 countskipped=0
 UNIXTIME=$(date +%s)
