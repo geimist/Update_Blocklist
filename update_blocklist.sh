@@ -39,7 +39,7 @@ sqlite3 -header -csv /etc/synoautoblock.db "select IP FROM AutoBlockIP WHERE TYP
 # load online IP-list:
 curl -s "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort > /tmp/onlinelist.txt
 # filter diffs:
-diff "/tmp/before.txt" "/tmp/onlinelist.txt" | grep '^>' | sed -e 's/>//' > /tmp/blocklist.txt  # only diffs from left to right
+diff "/tmp/before.txt" "/tmp/onlinelist.txt" | grep '^>' | sed -e 's/> //' > /tmp/blocklist.txt  # only diffs from left to right
 # stats …
 IPcountdiffs=$(cat "/tmp/blocklist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)
 IPcountList=$(cat "/tmp/onlinelist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)
