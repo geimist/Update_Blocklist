@@ -48,8 +48,6 @@ while read BLOCKED_IP
     do 
         # Check if IP valid 
         VALID_IPv4=$(echo "$BLOCKED_IP" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l) 
-
-echo "$BLOCKED_IP"
     
         if [[ $VALID_IPv4 -eq 1 ]]; then 
             # Convert IPv4 to IPv6 :) 
@@ -61,15 +59,15 @@ echo "$BLOCKED_IP"
                 countadded=$(( $countadded + 1 ))
                 if [[ $LOGLEVEL -eq 2 ]]; then 
                     echo "IP added to Database!    -->  $BLOCKED_IP" 
-#                elif [[ $LOGLEVEL -eq 1 ]]; then
-#                    echo -n "."
+                elif [[ $LOGLEVEL -eq 1 ]]; then
+                    echo -n "."
                 fi
             else 
                 countskipped=$(( $countskipped + 1 ))
                 if [[ $LOGLEVEL -eq 2 ]]; then
                     echo "IP already in Database!  -->  $BLOCKED_IP" 
-#                elif [[ $LOGLEVEL -eq 1 ]]; then
-#                    echo -n "."
+                elif [[ $LOGLEVEL -eq 1 ]]; then
+                    echo -n "."
                 fi
             fi 
         fi 
