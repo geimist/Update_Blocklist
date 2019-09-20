@@ -6,10 +6,8 @@
 # version 0.2 by AndiHeitzer,   18.09.2019 / DSM 6.2.1 > add further Vars for DB
 # version 0.3 by geimist,       20.09.2019 / DSM 6.2.2 > add Stats / Loglevel / speed improvement
 
-# TYPE=0 > Blacklist / TYPE=3 > Whitelist
-TYPE=0 
-
-META='' 
+# Deny=1 > Blacklist / Deny=0 > Whitelist
+Deny=1
 
 # Download from www.blocklist.de | Select Typ: {all} {ssh} {mail} {apache} {imap} {ftp} {sip} {bots} {strongips} {ircbot} {bruteforcelogin} 
 BLOCKLIST_TYP="all" 
@@ -20,11 +18,14 @@ DELETE_IP_AFTER="7"
 # Loglevel 1: Show Stats at the bottom / Loglevel 2: Show all / Loglevel 0: disable
 LOGLEVEL=1
 
+TYPE=0 
+META='' 
+
 ############################################################################################################### 
 # Do NOT change after here!
 
-# SQL Create-Statement:
-# CREATE TABLE AutoBlockIP(IP varchar(50) PRIMARY KEY,RecordTime date NOT NULL,ExpireTime date NOT NULL,Deny boolean NOT NULL,IPStd varchr(50) NOT NULL,Type INTEGER,Meta varchar(256))
+# SQL Create-Statement for restore:
+# 'CREATE TABLE AutoBlockIP(IP varchar(50) PRIMARY KEY,RecordTime date NOT NULL,ExpireTime date NOT NULL,Deny boolean NOT NULL,IPStd varchr(50) NOT NULL,Type INTEGER,Meta varchar(256))'
 if [ $(whoami) != "root" ]; then
     echo "WARNING: this script must run from root!" >&2
     exit 1
@@ -35,7 +36,7 @@ countskipped=0
 UNIXTIME=$(date +%s)
 UNIXTIME_DELETE_IP=$(date -d "+$DELETE_IP_AFTER days" +%s) 
 # current IP-list:
-sqlite3 -header -csv /etc/synoautoblock.db "select IP FROM AutoBlockIP WHERE TYPE='0' ORDER BY 'IP' ASC;" | sed -e '1d' | sort > /tmp/before.txt
+sqlite3 -header -csv /etc/synoautoblock.db "select IP FROM AutoBlockIP WHERE Deny='1' ORDER BY 'IP' ASC;" | sed -e '1d' | sort > /tmp/before.txt
 # load online IP-list:
 curl -s "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort > /tmp/onlinelist.txt
 # filter diffs:
@@ -55,7 +56,7 @@ while read BLOCKED_IP
             IPv6=$(printf "0000:0000:0000:0000:0000:FFFF:%02X%02X:%02X%02X" $IPv4)
             CHECK_IF_EXISTS=$(sqlite3 /etc/synoautoblock.db "SELECT DENY FROM AutoBlockIP WHERE IP = '$BLOCKED_IP'" | wc -l)
             if [[ $CHECK_IF_EXISTS -lt 1 ]]; then 
-                INSERT=$(sqlite3 /etc/synoautoblock.db "INSERT INTO AutoBlockIP VALUES ('$BLOCKED_IP','$UNIXTIME','$UNIXTIME_DELETE_IP','1','$IPv6','$TYPE','$META')")
+                INSERT=$(sqlite3 /etc/synoautoblock.db "INSERT INTO AutoBlockIP VALUES ('$BLOCKED_IP','$UNIXTIME','$UNIXTIME_DELETE_IP','$Deny','$IPv6','$TYPE','$META')")
                 countadded=$(( $countadded + 1 ))
                 if [[ $LOGLEVEL -eq 2 ]]; then 
                     echo "IP added to Database!    -->  $BLOCKED_IP" 
@@ -86,7 +87,7 @@ if [[ $LOGLEVEL -eq 1 ]] || [[ $LOGLEVEL -eq 2 ]]; then
     echo "count of diffs:               $IPcountdiffs"
     echo "added IPs:                    $countadded"
     echo "skipped IPs:                  $countskipped"
-    echo "count of blocked IPs:         $(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE TYPE='0' " )"
+    echo "count of blocked IPs:         $(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )"
 fi 
 
-exit 0 
+exit 0
