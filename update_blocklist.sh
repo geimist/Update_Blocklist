@@ -1,10 +1,10 @@
 #!/bin/sh
-# /volume1/DEV/update_blocklist.sh
-# Script import IP's from blocklist.de into DSM Auto-Block
+# /volume1/homes/admin/script/update_blocklist.sh
+# Script import IP's from blocklist.de 
 # https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten&p=837478&viewfull=1#post837478
 # version 0.1 by Ruedi61,       15.11.2016 / DSM 6.0.3
 # version 0.2 by AndiHeitzer,   18.09.2019 / DSM 6.2.1 > add further Vars for DB
-# version 0.3 by geimist,       19.09.2019 / DSM 6.2.2 > enlarge Stats / Loglevel
+# version 0.3 by geimist,       20.09.2019 / DSM 6.2.2 > add Stats / Loglevel / speed improvement
 
 # TYPE=0 > Blacklist / TYPE=3 > Whitelist
 TYPE=0 
@@ -21,26 +21,35 @@ DELETE_IP_AFTER="7"
 LOGLEVEL=1
 
 ############################################################################################################### 
-# Do NOT change after here 
-############################################################################################################### 
+# Do NOT change after here!
 
+# SQL Create-Statement:
 # CREATE TABLE AutoBlockIP(IP varchar(50) PRIMARY KEY,RecordTime date NOT NULL,ExpireTime date NOT NULL,Deny boolean NOT NULL,IPStd varchr(50) NOT NULL,Type INTEGER,Meta varchar(256))
 if [ $(whoami) != "root" ]; then
     echo "WARNING: this script must run from root!" >&2
     exit 1
 fi
-
+    
 countadded=0
 countskipped=0
 UNIXTIME=$(date +%s)
 UNIXTIME_DELETE_IP=$(date -d "+$DELETE_IP_AFTER days" +%s) 
-wget -q "https://lists.blocklist.de/lists/$BLOCKLIST_TYP.txt" -O /tmp/blocklist.txt 
-IPcountList=$(cat "/tmp/blocklist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)
+# current IP-list:
+sqlite3 -header -csv /etc/synoautoblock.db "select IP FROM AutoBlockIP WHERE TYPE='0' ORDER BY 'IP' ASC;" | sed -e '1d' | sort > /tmp/before.txt
+# load online IP-list:
+curl -s "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort > /tmp/onlinelist.txt
+# filter diffs:
+diff "/tmp/before.txt" "/tmp/onlinelist.txt" | grep '^>' | sed -e 's/>//' > /tmp/blocklist.txt  # only diffs from left to right
+# stats …
+IPcountdiffs=$(cat "/tmp/blocklist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)
+IPcountList=$(cat "/tmp/onlinelist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)
 
 while read BLOCKED_IP 
     do 
         # Check if IP valid 
         VALID_IPv4=$(echo "$BLOCKED_IP" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l) 
+
+echo "$BLOCKED_IP"
     
         if [[ $VALID_IPv4 -eq 1 ]]; then 
             # Convert IPv4 to IPv6 :) 
@@ -52,21 +61,23 @@ while read BLOCKED_IP
                 countadded=$(( $countadded + 1 ))
                 if [[ $LOGLEVEL -eq 2 ]]; then 
                     echo "IP added to Database!    -->  $BLOCKED_IP" 
-                elif [[ $LOGLEVEL -eq 1 ]]; then
-                    echo -n "."
+#                elif [[ $LOGLEVEL -eq 1 ]]; then
+#                    echo -n "."
                 fi
             else 
                 countskipped=$(( $countskipped + 1 ))
                 if [[ $LOGLEVEL -eq 2 ]]; then
                     echo "IP already in Database!  -->  $BLOCKED_IP" 
-                elif [[ $LOGLEVEL -eq 1 ]]; then
-                    echo -n "."
+#                elif [[ $LOGLEVEL -eq 1 ]]; then
+#                    echo -n "."
                 fi
             fi 
         fi 
     done < /tmp/blocklist.txt
 
 rm /tmp/blocklist.txt 
+rm /tmp/before.txt
+rm /tmp/onlinelist.txt
 
 if [[ $LOGLEVEL -eq 1 ]] || [[ $LOGLEVEL -eq 2 ]]; then 
     END=$(date +%s) 
@@ -74,9 +85,10 @@ if [[ $LOGLEVEL -eq 1 ]] || [[ $LOGLEVEL -eq 2 ]]; then
     echo -e
     echo "duration of the process:      $RUNTIME Seconds" 
     echo "count of IPs in list:         $IPcountList"
+    echo "count of diffs:               $IPcountdiffs"
     echo "added IPs:                    $countadded"
     echo "skipped IPs:                  $countskipped"
     echo "count of blocked IPs:         $(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE TYPE='0' " )"
-fi
+fi 
 
 exit 0 
