@@ -41,9 +41,6 @@ sqlite3 -header -csv /etc/synoautoblock.db "select IP FROM AutoBlockIP WHERE Den
 curl -s "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort > /tmp/onlinelist.txt
 # filter diffs:
 diff "/tmp/before.txt" "/tmp/onlinelist.txt" | grep '^>' | sed -e 's/> //' > /tmp/blocklist.txt  # only diffs from left to right
-# stats …
-IPcountdiffs=$(cat "/tmp/blocklist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)
-IPcountList=$(cat "/tmp/onlinelist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)
 
 while read BLOCKED_IP 
     do 
@@ -74,20 +71,21 @@ while read BLOCKED_IP
         fi 
     done < /tmp/blocklist.txt
 
-rm /tmp/blocklist.txt 
-rm /tmp/before.txt
-rm /tmp/onlinelist.txt
-
+# stats …
 if [[ $LOGLEVEL -eq 1 ]] || [[ $LOGLEVEL -eq 2 ]]; then 
     END=$(date +%s) 
     RUNTIME=$((END-UNIXTIME)) 
     echo -e
     echo "duration of the process:      $RUNTIME Seconds" 
-    echo "count of IPs in list:         $IPcountList"
-    echo "count of diffs:               $IPcountdiffs"
+    echo "count of IPs in list:         $(cat "/tmp/onlinelist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)"
+    echo "count of diffs:               $(cat "/tmp/blocklist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)"
     echo "added IPs:                    $countadded"
     echo "skipped IPs:                  $countskipped"
     echo "count of blocked IPs:         $(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )"
 fi 
+
+rm /tmp/blocklist.txt 
+rm /tmp/before.txt
+rm /tmp/onlinelist.txt
 
 exit 0
