@@ -75,7 +75,8 @@ while read BLOCKED_IP
 if [[ $LOGLEVEL -eq 1 ]] || [[ $LOGLEVEL -eq 2 ]]; then 
     END=$(date +%s) 
     RUNTIME=$((END-UNIXTIME)) 
-    echo -e
+    echo -e; 
+    echo "stats:----------------------------------"
     echo "duration of the process:      $RUNTIME Seconds" 
     echo "count of IPs in list:         $(cat "/tmp/onlinelist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)"
     echo "count of diffs:               $(cat "/tmp/blocklist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)"
