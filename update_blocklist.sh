@@ -62,11 +62,11 @@ while read BLOCKED_IP
                 fi
             else 
                 countskipped=$(( $countskipped + 1 ))
-                if [[ $LOGLEVEL -eq 2 ]]; then
+#                if [[ $LOGLEVEL -eq 2 ]]; then
                     echo "IP already in Database!  -->  $BLOCKED_IP" 
-                elif [[ $LOGLEVEL -eq 1 ]]; then
-                    echo -n "."
-                fi
+#                elif [[ $LOGLEVEL -eq 1 ]]; then
+#                    echo -n "."
+#                fi
             fi 
         fi 
     done < /tmp/blocklist.txt
