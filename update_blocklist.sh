@@ -16,8 +16,8 @@
 # Loglevel 1: Show Stats at the bottom / Loglevel 2: Show all / Loglevel 0: disable
     LOGLEVEL=1
 
-    TYPE=0 
-    META='' 
+    TYPE=0
+    META='' # e.g. subnetmask
 
 ############################################################################################################### 
 # Do NOT change after here!
@@ -56,8 +56,8 @@ UNIXTIME_DELETE_IP=$(date -d "+$DELETE_IP_AFTER days" +%s)
 # filter diffs:
     diff "/tmp/before.txt" "/tmp/onlinelist.txt" | grep '^>' | sed -e 's/> //' > /tmp/blocklist.txt  # only diffs from left to right
 # delete IP if expired: 
-    CountExpiredIP=$(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME")
-    sqlite3 /etc/synoautoblock.db "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME"
+    CountExpiredIP=$(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1'")
+    sqlite3 /etc/synoautoblock.db "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' "
 
 while read BLOCKED_IP 
     do 
