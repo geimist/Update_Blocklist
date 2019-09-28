@@ -1,25 +1,23 @@
 #!/bin/sh
 # /volume1/homes/admin/script/update_blocklist.sh
+# $(/volume1/homes/admin/script/update_blocklist.sh > /volume1/system/@Logfiles/update_blocklist/update_blocklistLOG_$(date +%Y)-$(date +%m)-$(date +%d)_$(date +%H)-$(date +%M).log 2>&1) &
 # Script import IP's from blocklist.de 
 # https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten&p=837478&viewfull=1#post837478
 # version 0.1 by Ruedi61,       15.11.2016 / DSM 6.0.3
 # version 0.2 by AndiHeitzer,   18.09.2019 / DSM 6.2.1 > add further Vars for DB
-# version 0.3 by geimist,       20.09.2019 / DSM 6.2.2 > add Stats / Loglevel / speed improvement
+# version 0.3 by geimist,       28.09.2019 / DSM 6.2.1 > add Stats / Loglevel / speed improvement / delete expired IPs
 
 # Deny=1 > Blacklist / Deny=0 > Whitelist
-Deny=1
-
+    Deny=1
 # Download from www.blocklist.de | Select Typ: {all} {ssh} {mail} {apache} {imap} {ftp} {sip} {bots} {strongips} {ircbot} {bruteforcelogin} 
-BLOCKLIST_TYP="all" 
-
+    BLOCKLIST_TYP="all" 
 # Delete IP after x Day's OR use 0 for permanent block 
-DELETE_IP_AFTER="7"  
-
+    DELETE_IP_AFTER="7"  
 # Loglevel 1: Show Stats at the bottom / Loglevel 2: Show all / Loglevel 0: disable
-LOGLEVEL=1
+    LOGLEVEL=1
 
-TYPE=0 
-META='' 
+    TYPE=0 
+    META='' 
 
 ############################################################################################################### 
 # Do NOT change after here!
@@ -30,17 +28,36 @@ if [ $(whoami) != "root" ]; then
     echo "WARNING: this script must run from root!" >&2
     exit 1
 fi
-    
+
+sec_to_time() {
+    local seconds=$1
+    local sign=""
+    if [[ ${seconds:0:1} == "-" ]]; then
+        seconds=${seconds:1}
+        sign="-"
+    fi
+    local hours=$(( seconds / 3600 ))
+    local minutes=$(( (seconds % 3600) / 60 ))
+    seconds=$(( seconds % 60 ))
+    printf "%s%02d:%02d:%02d" "$sign" $hours $minutes $seconds
+}
+
 countadded=0
 countskipped=0
 UNIXTIME=$(date +%s)
 UNIXTIME_DELETE_IP=$(date -d "+$DELETE_IP_AFTER days" +%s) 
+
+# count blocked IPs before:
+    countbefore=$(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )
 # current IP-list:
-sqlite3 -header -csv /etc/synoautoblock.db "select IP FROM AutoBlockIP WHERE Deny='1' ORDER BY 'IP' ASC;" | sed -e '1d' | sort > /tmp/before.txt
+    sqlite3 -header -csv /etc/synoautoblock.db "select IP FROM AutoBlockIP WHERE Deny='1' ORDER BY 'IP' ASC;" | sed -e '1d' | sort > /tmp/before.txt
 # load online IP-list:
-curl -s "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort > /tmp/onlinelist.txt
+    curl --max-time 30 -s "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort > /tmp/onlinelist.txt
 # filter diffs:
-diff "/tmp/before.txt" "/tmp/onlinelist.txt" | grep '^>' | sed -e 's/> //' > /tmp/blocklist.txt  # only diffs from left to right
+    diff "/tmp/before.txt" "/tmp/onlinelist.txt" | grep '^>' | sed -e 's/> //' > /tmp/blocklist.txt  # only diffs from left to right
+# delete IP if expired: 
+    CountExpiredIP=$(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME")
+    sqlite3 /etc/synoautoblock.db "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME"
 
 while read BLOCKED_IP 
     do 
@@ -62,11 +79,9 @@ while read BLOCKED_IP
                 fi
             else 
                 countskipped=$(( $countskipped + 1 ))
-#                if [[ $LOGLEVEL -eq 2 ]]; then
-                    echo "IP already in Database!  -->  $BLOCKED_IP" 
-#                elif [[ $LOGLEVEL -eq 1 ]]; then
-#                    echo -n "."
-#                fi
+                if [[ $LOGLEVEL -eq 1 ]] || [[ $LOGLEVEL -eq 2 ]]; then 
+                    echo -e; echo "IP already in Database!  -->  $BLOCKED_IP" 
+                fi
             fi 
         fi 
     done < /tmp/blocklist.txt
@@ -75,14 +90,15 @@ while read BLOCKED_IP
 if [[ $LOGLEVEL -eq 1 ]] || [[ $LOGLEVEL -eq 2 ]]; then 
     END=$(date +%s) 
     RUNTIME=$((END-UNIXTIME)) 
-    echo -e; 
+    echo -e; echo -e; 
     echo "stats:----------------------------------"
-    echo "duration of the process:      $RUNTIME Seconds" 
+    echo "duration of the process:      $(sec_to_time $RUNTIME)" 
     echo "count of IPs in list:         $(cat "/tmp/onlinelist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)"
     echo "count of diffs:               $(cat "/tmp/blocklist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)"
     echo "added IPs:                    $countadded"
+    echo "expired IPs (deleted):        $CountExpiredIP (set expiry time: $DELETE_IP_AFTER days)"
     echo "skipped IPs:                  $countskipped"
-    echo "count of blocked IPs:         $(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )"
+    echo "blocked IPs:                  before: $countbefore / current: $(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )"
 fi 
 
 rm /tmp/blocklist.txt 
