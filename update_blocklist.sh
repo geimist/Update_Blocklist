@@ -1,6 +1,5 @@
 #!/bin/sh
 # /volume1/homes/admin/script/update_blocklist.sh
-# $(/volume1/homes/admin/script/update_blocklist.sh > /volume1/system/@Logfiles/update_blocklist/update_blocklistLOG_$(date +%Y)-$(date +%m)-$(date +%d)_$(date +%H)-$(date +%M).log 2>&1) &
 # Script import IP's from blocklist.de 
 # https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten&p=837478&viewfull=1#post837478
 # version 0.1 by Ruedi61,       15.11.2016 / DSM 6.0.3
