@@ -15,9 +15,10 @@
     DELETE_IP_AFTER="7"  
 # Loglevel 1: Show Stats at the bottom / Loglevel 2: Show all / Loglevel 0: disable
     LOGLEVEL=1
-
-    TYPE=0
-    META='' # e.g. subnetmask
+# 0=Single Host / 1=? / 2=IP-Range (META must be set) / 3=subnetmask (META must be set)
+    TYPE=0 
+# e.g. subnetmask / upper IP-Range
+    META=''
 
 ############################################################################################################### 
 # Do NOT change after here!
