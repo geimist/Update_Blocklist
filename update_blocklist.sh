@@ -49,16 +49,19 @@ UNIXTIME_DELETE_IP=$(date -d "+$DELETE_IP_AFTER days" +%s)
 
 # count blocked IPs before:
     countbefore=$(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )
+# delete IP if expired: 
+    CountExpiredIP=$(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1'")
+    sqlite3 /etc/synoautoblock.db "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' "
 # current IP-list:
     sqlite3 -header -csv /etc/synoautoblock.db "select IP FROM AutoBlockIP WHERE Deny='1' ORDER BY 'IP' ASC;" | sed -e '1d' | sort > /tmp/before.txt
 # load online IP-list:
     curl --max-time 30 -s "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort > /tmp/onlinelist.txt
 # filter diffs:
     diff "/tmp/before.txt" "/tmp/onlinelist.txt" | grep '^>' | sed -e 's/> //' > /tmp/blocklist.txt  # only diffs from left to right
-# delete IP if expired: 
-    CountExpiredIP=$(sqlite3 /etc/synoautoblock.db "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1'")
-    sqlite3 /etc/synoautoblock.db "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' "
-
+# count of diffs:
+    countofdiffs=$(cat "/tmp/blocklist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)
+    echo "$countofdiffs IPs must be importet"
+    
 while read BLOCKED_IP 
     do 
         # Check if IP valid 
@@ -90,9 +93,9 @@ while read BLOCKED_IP
 if [[ $LOGLEVEL -eq 1 ]] || [[ $LOGLEVEL -eq 2 ]]; then 
     echo -e; echo -e; 
     echo "stats:----------------------------------"
-    echo "duration of the process:      $(sec_to_time $(expr $(date +%s)-${UNIXTIME}) )"
+    echo "duration of the process:      $(sec_to_time $(expr $(date +%s)-${UNIXTIME}) )" 
     echo "count of IPs in list:         $(cat "/tmp/onlinelist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)"
-    echo "count of diffs:               $(cat "/tmp/blocklist.txt" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l)"
+    echo "count of diffs:               $countofdiffs"
     echo "added IPs:                    $countadded"
     echo "expired IPs (deleted):        $CountExpiredIP (set expiry time: $DELETE_IP_AFTER days)"
     echo "skipped IPs:                  $countskipped"
