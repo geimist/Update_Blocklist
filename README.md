@@ -4,3 +4,5 @@ aktualisiert / importiert von [blocklist.de](http://www.blocklist.de/de/index.ht
 
 * der erste Programmlauf kann sehr lange dauern (ggf. über Stunden) / spätere Programmläufe dauern dann meist nur wenige Sekunden
 * aufgrund der sich schnell ändernten Onlineliste, läuft das Skript bei mir aller 10 Minuten
+
+([Quelle](https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten))
