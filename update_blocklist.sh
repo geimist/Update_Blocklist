@@ -1,5 +1,4 @@
 #!/bin/sh
-# /volume3/DEV/update_blocklist.sh | tee /volume3/DEV/update_blocklist_$(date +%s).log
 
 #############################################################################################################################################
 # /volume1/homes/admin/script/update_blocklist.sh                                                                                           #
