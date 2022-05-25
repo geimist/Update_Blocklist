@@ -129,7 +129,8 @@ sec_to_time() {
     progress_start=0
     progress_end=$countofdiffs
 
-# beginn sql statement::
+# beginn sql statement:
+    # ggf. "INSERT OR REPLACE INTO ..." https://www.sqlite.org/lang_insert.html
     echo "INSERT OR IGNORE INTO AutoBlockIP ('IP', 'RecordTime', 'ExpireTime', 'Deny', 'IPStd', 'Type', 'Meta') VALUES " > "$sql_statement"
 
 while read BLOCKED_IP ; do 
