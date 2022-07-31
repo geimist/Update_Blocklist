@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #############################################################################################################################################
-# /volume1/homes/admin/script/update_blocklist.sh                                                                                           #
+# /volume1/homes/user/script/update_blocklist.sh                                                                                           #
 #                                                                                                                                           #
 # Script import IP's from blocklist.de                                                                                                      #
 # https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten&p=837478&viewfull=1#post837478            #
