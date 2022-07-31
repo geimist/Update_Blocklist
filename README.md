@@ -4,6 +4,7 @@ aktualisiert / importiert von [blocklist.de](http://www.blocklist.de/de/index.ht
 
 * der erste Programmlauf kann sehr lange dauern (~~ggf. über Stunden~~) / spätere Programmläufe dauern dann meist nur wenige Sekunden
 * aufgrund der sich schnell ändernten Onlineliste, läuft das Skript bei mir aller 10 Minuten
+* [step-by-step Anleitung](https://www.synology-forum.de/threads/staendige-anmeldeversuche-am-dsm.122250/post-1015901)
 
 ([Quelle](https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten))
 
