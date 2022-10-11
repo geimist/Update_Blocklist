@@ -9,7 +9,7 @@
 # version 0.2 by AndiHeitzer,   18.09.2019 / DSM 6.2.1  > add further Vars for DB                                                           #
 # version 0.3 by geimist,       28.09.2019 / DSM 6.2.1  > add stats / loglevel / speed improvement / delete expired IPs                     #
 # version 0.4 by geimist,       24.05.2022 / DSM 7.1    > speed improvement over 5x                                                         #
-#                                                       (for 10000 IPs only 107 seconds are needed instead of 658 seconds)                  #
+#                                                         (for 10000 IPs only 107 seconds are needed instead of 658 seconds)                #
 #                                                                                                                                           #
 #############################################################################################################################################
 
