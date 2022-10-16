@@ -10,6 +10,7 @@
 # version 0.3 by geimist,       28.09.2019 / DSM 6.2.1  > add stats / loglevel / speed improvement / delete expired IPs                     #
 # version 0.4 by geimist,       24.05.2022 / DSM 7.1    > speed improvement over 5x                                                         #
 #                                                         (for 10000 IPs only 107 seconds are needed instead of 658 seconds)                #
+# version 0.5 by geimist,       16.10.2022 / DSM 7.1    > permanent block does not work properly                                            #
 #                                                                                                                                           #
 #############################################################################################################################################
 
@@ -91,15 +92,21 @@ sec_to_time() {
     db_path="/etc/synoautoblock.db"
 
     UNIXTIME=$(date +%s)
-    UNIXTIME_DELETE_IP=$(date -d "+$DELETE_IP_AFTER days" +%s) 
+    
+    if [ "$DELETE_IP_AFTER" = 0 ]; then
+        UNIXTIME_DELETE_IP=0
+    else
+        UNIXTIME_DELETE_IP=$(date -d "+$DELETE_IP_AFTER days" +%s) 
+    fi
+    
     [ ! -f "$db_path" ] && sqlite3 "$db_path" 'CREATE TABLE AutoBlockIP(IP varchar(50) PRIMARY KEY,RecordTime date NOT NULL,ExpireTime date NOT NULL,Deny boolean NOT NULL,IPStd varchr(50) NOT NULL,Type INTEGER,Meta varchar(256))'
 
 # count blocked IPs before:
     countbefore=$(sqlite3 "$db_path" "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )
 
 # delete IP if expired: 
-    CountExpiredIP=$(sqlite3 "$db_path" "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1'")
-    sqlite3 "$db_path" "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' "
+    CountExpiredIP=$(sqlite3 "$db_path" "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' AND NOT ExpireTime='0' ")
+    sqlite3 "$db_path" "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' AND NOT ExpireTime='0' "
 
 # current IP-list:
     sqlite3 -header -csv "$db_path" "select IP FROM AutoBlockIP WHERE Deny='1' ORDER BY 'IP' ASC;" | sed -e '1d' | sort > "$before_list"
