@@ -32,12 +32,12 @@
     META=''
 
 # GeoIP implementation:
-    # defined countrys are: blockonly | blockother | off
+    # defined countries are: blockonly | blockother | off
     # blockonly     only the defined countries should be included
     # blockother    only all other countries are to be included
     useGeoIP="off"
     GeoIP_DB="/var/db/geoip-database/GeoLite2-City.mmdb"
-    countrys=(DE CN)    # ISO style - example: countrys=(DE CN)
+    countries=(DE CN)    # ISO style - example: countries=(DE CN)
 
 #############################################################################################################################################
 # Do NOT change after here!
@@ -259,11 +259,11 @@ while read BLOCKED_IP ; do
         fi
     fi
 
-    if [ "$useGeoIP" = blockonly ] && echo "${countrys[@]}" | grep -qiv "$request_GeoIP_result" ; then
+    if [ "$useGeoIP" = blockonly ] && echo "${countries[@]}" | grep -qiv "$request_GeoIP_result" ; then
         let skipByGeoIP=$skipByGeoIP+1
         [ "$LOGLEVEL" -eq 2 ] && echo "continue - $BLOCKED_IP - country: $request_GeoIP_result"
         continue
-    elif [ "$useGeoIP" = blockother ] && echo "${countrys[@]}" | grep -qi "$request_GeoIP_result" ; then
+    elif [ "$useGeoIP" = blockother ] && echo "${countries[@]}" | grep -qi "$request_GeoIP_result" ; then
         let skipByGeoIP=$skipByGeoIP+1
         [ "$LOGLEVEL" -eq 2 ] && echo "continue - $BLOCKED_IP - country: $request_GeoIP_result"
         continue
