@@ -244,8 +244,7 @@ sec_to_time() {
     # ggf. "INSERT OR REPLACE INTO ..." https://www.sqlite.org/lang_insert.html
     echo "INSERT OR IGNORE INTO AutoBlockIP ('IP', 'RecordTime', 'ExpireTime', 'Deny', 'IPStd', 'Type', 'Meta') VALUES " > "$sql_statement"
 
-while read BLOCKED_IP ; do 
-    let progress_start=progress_start+1
+while read BLOCKED_IP ; do
 
     # Check if IP valid 
     VALID_IPv4=$(echo "$BLOCKED_IP" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l) 
@@ -253,7 +252,6 @@ while read BLOCKED_IP ; do
     # check GeoIP
     if [ "$useGeoIP" = blockonly ] || [ "$useGeoIP" = blockother ]; then
         request_GeoIP_result="$(request_GeoIP "$BLOCKED_IP")"
-
         if grep -qi "is not in the database" <<<"$request_GeoIP_result" ; then
             # is not in the database
             request_GeoIP_result="empty"
@@ -261,10 +259,12 @@ while read BLOCKED_IP ; do
 
         if [ "$useGeoIP" = blockonly ] && echo "${countries[@]}" | grep -qiv "$request_GeoIP_result" ; then
             let skipByGeoIP=$skipByGeoIP+1
+            let progress_start=progress_start+1
             [ "$LOGLEVEL" -eq 2 ] && echo "continue - $BLOCKED_IP - country: $request_GeoIP_result"
             continue
         elif [ "$useGeoIP" = blockother ] && echo "${countries[@]}" | grep -qi "$request_GeoIP_result" ; then
             let skipByGeoIP=$skipByGeoIP+1
+            let progress_start=progress_start+1
             [ "$LOGLEVEL" -eq 2 ] && echo "continue - $BLOCKED_IP - country: $request_GeoIP_result"
             continue
         fi
@@ -277,15 +277,17 @@ while read BLOCKED_IP ; do
         IPv6=$(printf "0000:0000:0000:0000:0000:FFFF:%02X%02X:%02X%02X" $IPv4)
 
         echo "('$BLOCKED_IP','$UNIXTIME','$UNIXTIME_DELETE_IP','$Deny','$IPv6','$TYPE','$META')," >> "$sql_statement"
-
         countadded=$(( $countadded + 1 ))
+
         if [ "$LOGLEVEL" -eq 2 ]; then 
             echo "IP added to Database!    -->  $BLOCKED_IP" 
         elif [ "$LOGLEVEL" -eq 1 ] && [ "$PROGRESSBAR" -eq 1 ]; then
             # progressbar:
+            let progress_start=progress_start+1
             progressbar ${progress_start} ${progress_end}
         fi
-    fi 
+    fi
+
 done < "$blocklist_list"
 
 if [ "$countofdiffs" -ge 1 ] ; then
