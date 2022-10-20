@@ -257,16 +257,16 @@ while read BLOCKED_IP ; do
             # is not in the database
             request_GeoIP_result="empty"
         fi
-    fi
 
-    if [ "$useGeoIP" = blockonly ] && echo "${countries[@]}" | grep -qiv "$request_GeoIP_result" ; then
-        let skipByGeoIP=$skipByGeoIP+1
-        [ "$LOGLEVEL" -eq 2 ] && echo "continue - $BLOCKED_IP - country: $request_GeoIP_result"
-        continue
-    elif [ "$useGeoIP" = blockother ] && echo "${countries[@]}" | grep -qi "$request_GeoIP_result" ; then
-        let skipByGeoIP=$skipByGeoIP+1
-        [ "$LOGLEVEL" -eq 2 ] && echo "continue - $BLOCKED_IP - country: $request_GeoIP_result"
-        continue
+        if [ "$useGeoIP" = blockonly ] && echo "${countries[@]}" | grep -qiv "$request_GeoIP_result" ; then
+            let skipByGeoIP=$skipByGeoIP+1
+            [ "$LOGLEVEL" -eq 2 ] && echo "continue - $BLOCKED_IP - country: $request_GeoIP_result"
+            continue
+        elif [ "$useGeoIP" = blockother ] && echo "${countries[@]}" | grep -qi "$request_GeoIP_result" ; then
+            let skipByGeoIP=$skipByGeoIP+1
+            [ "$LOGLEVEL" -eq 2 ] && echo "continue - $BLOCKED_IP - country: $request_GeoIP_result"
+            continue
+        fi
     fi
 
     # prepare sql statement
