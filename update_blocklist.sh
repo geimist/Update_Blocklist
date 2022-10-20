@@ -253,6 +253,7 @@ while read BLOCKED_IP ; do
     # check GeoIP
     if [ "$useGeoIP" = blockonly ] || [ "$useGeoIP" = blockother ]; then
         request_GeoIP_result="$(request_GeoIP "$BLOCKED_IP")"
+
         if grep -qi "is not in the database" <<<"$request_GeoIP_result" ; then
             # is not in the database
             request_GeoIP_result="empty"
