@@ -218,15 +218,15 @@ sec_to_time() {
 # load online IP-list:
     wget -q --timeout=30 --tries=2 -nv -O - "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort | uniq > "$online_list"
 
-    if [ $(stat -c %s "$online_list") -eq 0 ] || [ ! -f "$online_list" ];then
-        echo -n "WARNING: The server blocklist.de is not available! Use alternative list -> "
-        wget -q --timeout=30 --tries=2 -nv -O - "https://mariushosting.com/wp-content/uploads/$(date +%Y/%m)/deny-ip-list.txt" | sort | uniq > "$online_list"
-        if echo "$wgetlog" | grep -q "failed" ; then
-            echo "failed!"
+    if [ $(stat -c %s "$online_list") -eq 0 ] || [ ! -f "$online_list" ] || [ $? != 0 ];then
+        echo "WARNING: The server blocklist.de is not available!"
+#        wget -q --timeout=30 --tries=2 -nv -O - "https://mariushosting.com/wp-content/uploads/$(date +%Y/%m)/deny-ip-list.txt" | sort | uniq > "$online_list"
+#        if echo "$wgetlog" | grep -q "failed" ; then
+#            echo "failed!"
             exit 1
-        else
-            echo "OK"
-        fi
+#        else
+#            echo "OK"
+#        fi
     fi
 
 # filter diffs - only diffs from left to right:
