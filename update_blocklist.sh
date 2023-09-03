@@ -27,7 +27,7 @@
     DELETE_IP_AFTER=7
 # Loglevel 1: Show Stats at the bottom / Loglevel 2: Show all / Loglevel 0: disable
     LOGLEVEL=1
-    PROGRESSBAR=1
+    PROGRESSBAR=0
 
 # 0=Single Host / 1=? / 2=IP-Range (META must be set) / 3=subnetmask (META must be set)
     TYPE=0 
