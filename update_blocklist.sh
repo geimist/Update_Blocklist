@@ -213,11 +213,6 @@ sec_to_time() {
 
 # load online IP-list:
     if ! wget -q --timeout=60 --tries=3 -nv -O - "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort | uniq > "${online_list}" || [ ! -f "${online_list}" ] || [ "$(stat -c %s "${online_list}")" -eq 0 ]; then
-
-#    if [ $? != 0 ] || [ ! -f "${online_list}" ] || [ $(stat -c %s "${online_list}") -eq 0 ]; then
-#    wget -q --timeout=60 --tries=3 -nv -O - "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort | uniq > "${online_list}"
-
-#    if [ $? != 0 ] || [ ! -f "${online_list}" ] || [ $(stat -c %s "${online_list}") -eq 0 ]; then
         echo "WARNING: The server blocklist.de is not available!"
         # an alternative list could be loaded here
         exit 1
