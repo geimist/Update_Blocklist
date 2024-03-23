@@ -2,23 +2,24 @@
 # shellcheck disable=SC1091,SC2001
 
 
-#############################################################################################################################################
-#                                                                                                                                           #
-# Script import IP's from blocklist.de                                                                                                      #
-#                                                                                                                                           #
-# https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten&p=837478&viewfull=1#post837478            #
-# version 0.1 by Ruedi61,       15.11.2016 / DSM 6.0.3                                                                                      #
-# version 0.2 by AndiHeitzer,   18.09.2019 / DSM 6.2.1  > add further Vars for DB                                                           #
-# version 0.3 by geimist,       28.09.2019 / DSM 6.2.1  > add stats / loglevel / speed improvement / delete expired IPs                     #
-# version 0.4 by geimist,       24.05.2022 / DSM 7.1    > speed improvement over 5x                                                         #
-#                                                         (for 10000 IPs only 107 seconds are needed instead of 658 seconds)                #
-# version 0.5 by geimist,       16.10.2022 / DSM 7.1    > permanent block does not work properly                                            #
-# version 0.6 by geimist,       17.10.2022 / DSM 7.1    > GeoIP verification added (ATTENTION: this reduces the speed significantly)        #
-# version 0.7 by geimist,       02.09.2023 / DSM 7.2    > Error while checking the download of the block list                               #
-#                                                       > Adjustment of the code so that it passes shellcheck                               #
-# version 0.8 by geimist,       11.09.2023 / DSM 7.2    > loop with defined number of attempts (MAX_ATTEMPTS) to load the block list        #
-#                                                                                                                                           #
-#############################################################################################################################################
+#################################################################################################################################################
+#                                                                                                                                               #
+# Script import IP's from blocklist.de                                                                                                          #
+#                                                                                                                                               #
+# https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten&p=837478&viewfull=1#post837478                #
+# version 0.1 by Ruedi61,       15.11.2016 / DSM 6.0.3                                                                                          #
+# version 0.2 by AndiHeitzer,   18.09.2019 / DSM 6.2.1  > add further Vars for DB                                                               #
+# version 0.3 by geimist,       28.09.2019 / DSM 6.2.1  > add stats / loglevel / speed improvement / delete expired IPs                         #
+# version 0.4 by geimist,       24.05.2022 / DSM 7.1    > speed improvement over 5x                                                             #
+#                                                         (for 10000 IPs only 107 seconds are needed instead of 658 seconds)                    #
+# version 0.5 by geimist,       16.10.2022 / DSM 7.1    > permanent block does not work properly                                                #
+# version 0.6 by geimist,       17.10.2022 / DSM 7.1    > GeoIP verification added (ATTENTION: this reduces the speed significantly)            #
+# version 0.7 by geimist,       02.09.2023 / DSM 7.2    > Error while checking the download of the block list                                   #
+#                                                       > Adjustment of the code so that it passes shellcheck                                   #
+# version 0.8 by geimist,       11.09.2023 / DSM 7.2    > loop with defined number of attempts (MAX_ATTEMPTS) to load the block list            #
+# version 0.9 by geimist,       23.03.2024 / DSM 7.2    > The exit status 1 (abnormal) will only be one time if blocklist.de is not available.  #
+#                                                                                                                                               #
+#################################################################################################################################################
 
 # Deny=1 > Blacklist / Deny=0 > Whitelist
     Deny=1
@@ -48,6 +49,7 @@
 # Do NOT change after here!
     skipByGeoIP=0
     attempts=0
+    LastExitState=0
 
 if [ "$(whoami)" != "root" ]; then
     echo "WARNING: this script must run from root!" >&2
@@ -133,6 +135,20 @@ fi
         fi
     # python3 -m pip list 2>/dev/null
     fi
+
+function_exit() {
+    # An error message is only displayed one time if the script was terminated abnormally.
+    ExitCode="$1"
+
+    if [ "${ExitCode}" = 1 ]; then
+        if [ "${LastExitState}" = 1 ]; then
+            exit 0
+        else
+            synosetkeyvalue "$0" LastExitState 1
+            exit 1
+        fi
+    fi
+}
 
 request_GeoIP() {
     {   echo 'import geoip2.database'
@@ -230,7 +246,7 @@ sec_to_time() {
                 sleep 5  # Waiting time before next attempt (optional)
             else
                 echo "Block list could not be loaded. Maximum number (${MAX_ATTEMPTS}) of attempts reached."
-                exit 1
+                function_exit 1
             fi
         fi
     done
@@ -318,6 +334,10 @@ if [ "${LOGLEVEL}" -eq 1 ] || [ "${LOGLEVEL}" -eq 2 ]; then
     echo "IP skipped by GeoIP:          ${skipByGeoIP}"
     echo "expired IPs (deleted):        ${CountExpiredIP} (set expiry time: ${DELETE_IP_AFTER} days)"
     echo "blocked IPs:                  before: ${countbefore} / current: $(sqlite3 "${db_path}" "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )"
-fi 
+fi
+
+if [ "${LastExitState}" = 1 ]; then
+    synosetkeyvalue "$0" LastExitState 0
+fi
 
 exit 0
