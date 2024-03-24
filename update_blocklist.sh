@@ -18,6 +18,7 @@
 #                                                       > Adjustment of the code so that it passes shellcheck                                   #
 # version 0.8 by geimist,       11.09.2023 / DSM 7.2    > loop with defined number of attempts (MAX_ATTEMPTS) to load the block list            #
 # version 0.9 by geimist,       23.03.2024 / DSM 7.2    > The exit status 1 (abnormal) will only be one time if blocklist.de is not available.  #
+# version 0.9.1 by geimist,     24.03.2024 / DSM 7.2    > An additional message is displayed when the script has been run normally again.       #
 #                                                                                                                                               #
 #################################################################################################################################################
 
@@ -338,6 +339,8 @@ fi
 
 if [ "${LastExitState}" = 1 ]; then
     synosetkeyvalue "$0" LastExitState 0
+    printf "\n\nINFO: The script could be executed normally again."
+    exit 2
 fi
 
 exit 0
