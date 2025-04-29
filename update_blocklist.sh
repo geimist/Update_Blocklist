@@ -233,7 +233,7 @@ sec_to_time() {
 
 # load online IP-list:
     while [ "${attempts}" -lt "${MAX_ATTEMPTS}" ]; do
-        wget -q --timeout=20 --tries=5 -nv -O - "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort | uniq > "${online_list}"
+        timeout 60 wget -q --timeout=10 --tries=5 -nv -O - "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort | uniq > "${online_list}"
         exit_status=$?
         # Check the exit status and file size
         if [ "${exit_status}" -eq 0 ] && [ -s "${online_list}" ]; then
