@@ -7,18 +7,19 @@
 # Script import IP's from blocklist.de                                                                                                          #
 #                                                                                                                                               #
 # https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten&p=837478&viewfull=1#post837478                #
-# version 0.1 by Ruedi61,       15.11.2016 / DSM 6.0.3                                                                                          #
-# version 0.2 by AndiHeitzer,   18.09.2019 / DSM 6.2.1  > add further Vars for DB                                                               #
-# version 0.3 by geimist,       28.09.2019 / DSM 6.2.1  > add stats / loglevel / speed improvement / delete expired IPs                         #
-# version 0.4 by geimist,       24.05.2022 / DSM 7.1    > speed improvement over 5x                                                             #
+# version 0.1 by Ruedi61        15.11.2016 / DSM 6.0.3                                                                                          #
+# version 0.2 by AndiHeitzer    18.09.2019 / DSM 6.2.1  > add further Vars for DB                                                               #
+# version 0.3 by geimist        28.09.2019 / DSM 6.2.1  > add stats / loglevel / speed improvement / delete expired IPs                         #
+# version 0.4 by geimist        24.05.2022 / DSM 7.1    > speed improvement over 5x                                                             #
 #                                                         (for 10000 IPs only 107 seconds are needed instead of 658 seconds)                    #
-# version 0.5 by geimist,       16.10.2022 / DSM 7.1    > permanent block does not work properly                                                #
-# version 0.6 by geimist,       17.10.2022 / DSM 7.1    > GeoIP verification added (ATTENTION: this reduces the speed significantly)            #
-# version 0.7 by geimist,       02.09.2023 / DSM 7.2    > Error while checking the download of the block list                                   #
+# version 0.5 by geimist        16.10.2022 / DSM 7.1    > permanent block does not work properly                                                #
+# version 0.6 by geimist        17.10.2022 / DSM 7.1    > GeoIP verification added (ATTENTION: this reduces the speed significantly)            #
+# version 0.7 by geimist        02.09.2023 / DSM 7.2    > Error while checking the download of the block list                                   #
 #                                                       > Adjustment of the code so that it passes shellcheck                                   #
-# version 0.8 by geimist,       11.09.2023 / DSM 7.2    > loop with defined number of attempts (MAX_ATTEMPTS) to load the block list            #
-# version 0.9 by geimist,       23.03.2024 / DSM 7.2    > The exit status 1 (abnormal) will only be one time if blocklist.de is not available.  #
-# version 0.9.1 by geimist,     24.03.2024 / DSM 7.2    > An additional message is displayed when the script has been run normally again.       #
+# version 0.8 by geimist        11.09.2023 / DSM 7.2    > loop with defined number of attempts (MAX_ATTEMPTS) to load the block list            #
+# version 0.9 by geimist        23.03.2024 / DSM 7.2    > The exit status 1 (abnormal) will only be one time if blocklist.de is not available.  #
+# version 0.9.1 by geimist      24.03.2024 / DSM 7.2    > An additional message is displayed when the script has been run normally again.       #
+# version 0.10 by geimist       29.04.2025 / DSM 7.2    > improved timout                                                                       #
 #                                                                                                                                               #
 #################################################################################################################################################
 
