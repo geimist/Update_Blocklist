@@ -1,6 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC1091,SC2001
-
+# shellcheck disable=SC1091
 
 #################################################################################################################################################
 #                                                                                                                                               #
@@ -8,22 +7,23 @@
 #                                                                                                                                               #
 # https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten&p=837478&viewfull=1#post837478                #
 # version 0.1 by Ruedi61        15.11.2016 / DSM 6.0.3                                                                                          #
-# version 0.2 by AndiHeitzer    18.09.2019 / DSM 6.2.1  > add further Vars for DB                                                               #
-# version 0.3 by geimist        28.09.2019 / DSM 6.2.1  > add stats / loglevel / speed improvement / delete expired IPs                         #
-# version 0.4 by geimist        24.05.2022 / DSM 7.1    > speed improvement over 5x                                                             #
+# version 0.2 by AndiHeitzer    18.09.2019 / DSM 6.2.1  ➜ add further Vars for DB                                                               #
+# version 0.3 by geimist        28.09.2019 / DSM 6.2.1  ➜ add stats / loglevel / speed improvement / delete expired IPs                         #
+# version 0.4 by geimist        24.05.2022 / DSM 7.1    ➜ speed improvement over 5x                                                             #
 #                                                         (for 10000 IPs only 107 seconds are needed instead of 658 seconds)                    #
-# version 0.5 by geimist        16.10.2022 / DSM 7.1    > permanent block does not work properly                                                #
-# version 0.6 by geimist        17.10.2022 / DSM 7.1    > GeoIP verification added (ATTENTION: this reduces the speed significantly)            #
-# version 0.7 by geimist        02.09.2023 / DSM 7.2    > Error while checking the download of the block list                                   #
-#                                                       > Adjustment of the code so that it passes shellcheck                                   #
-# version 0.8 by geimist        11.09.2023 / DSM 7.2    > loop with defined number of attempts (MAX_ATTEMPTS) to load the block list            #
-# version 0.9 by geimist        23.03.2024 / DSM 7.2    > The exit status 1 (abnormal) will only be one time if blocklist.de is not available.  #
-# version 0.9.1 by geimist      24.03.2024 / DSM 7.2    > An additional message is displayed when the script has been run normally again.       #
-# version 0.10 by geimist       29.04.2025 / DSM 7.2    > improved timout                                                                       #
+# version 0.5 by geimist        16.10.2022 / DSM 7.1    ➜ permanent block does not work properly                                                #
+# version 0.6 by geimist        17.10.2022 / DSM 7.1    ➜ GeoIP verification added (ATTENTION: this reduces the speed significantly)            #
+# version 0.7 by geimist        02.09.2023 / DSM 7.2    ➜ Error while checking the download of the block list                                   #
+#                                                       ➜ Adjustment of the code so that it passes shellcheck                                   #
+# version 0.8 by geimist        11.09.2023 / DSM 7.2    ➜ loop with defined number of attempts (MAX_ATTEMPTS) to load the block list            #
+# version 0.9 by geimist        23.03.2024 / DSM 7.2    ➜ The exit status 1 (abnormal) will only be one time if blocklist.de is not available.  #
+# version 0.9.1 by geimist      24.03.2024 / DSM 7.2    ➜ An additional message is displayed when the script has been run normally again.       #
+# version 0.10 by geimist       29.04.2025 / DSM 7.2    ➜ improved timout                                                                       #
+# version 0.10.1 by geimist     29.04.2025 / DSM 7.2    ➜ minor bugfixes                                                                       #
 #                                                                                                                                               #
 #################################################################################################################################################
 
-# Deny=1 > Blacklist / Deny=0 > Whitelist
+# Deny=1 ➜ Blacklist / Deny=0 ➜ Whitelist
     Deny=1
 # Download from www.blocklist.de | Select Typ: {all} {ssh} {mail} {apache} {imap} {ftp} {sip} {bots} {strongips} {ircbot} {bruteforcelogin} 
     BLOCKLIST_TYP="all" 
@@ -90,7 +90,7 @@ fi
                         echo "  install log:"
                         echo "${tmp_log1}" | sed -e "s/^/  /g"
                         echo "${tmp_log2}" | sed -e "s/^/  /g"
-                        return 1
+                        exit 1
                     fi
                 else
                     if python3 -m pip list 2>&1 | grep -q "version.*is available" ; then
@@ -122,7 +122,7 @@ fi
                         else
                             echo "failed ! ! ! (please install ${module} manually)"
                             echo "  install log:" && echo "${tmp_log1}" | sed -e "s/^/  /g"
-                            return 1
+                            exit 1
                         fi
                     else
                         printf "ok\n"
@@ -226,7 +226,7 @@ sec_to_time() {
     countbefore=$(sqlite3 "${db_path}" "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )
 
 # delete IP if expired: 
-    CountExpiredIP=$(sqlite3 "${db_path}" "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' AND NOT ExpireTime='0' AND NOT ExpireTime='0' ")
+    CountExpiredIP=$(sqlite3 "${db_path}" "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' AND NOT ExpireTime='0' ")
     sqlite3 "${db_path}" "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' AND NOT ExpireTime='0' "
 
 # current IP-list:
