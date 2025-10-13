@@ -1,3 +1,5 @@
+![Badge](https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2Fgeimist%2FUpdate_Blocklist&label=Visitors&icon=github&color=%23ffc107&message=&style=flat&tz=Europe%2FBerlin)
+
 # Update_Blocklist
 
 aktualisiert / importiert von [blocklist.de](http://www.blocklist.de/de/index.html) gesperrte IPs in die IP-Blocklist des Synology DSM
