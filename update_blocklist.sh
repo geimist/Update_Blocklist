@@ -20,7 +20,7 @@
 # version 0.9.1 by geimist      24.03.2024 / DSM 7.2    ➜ An additional message is displayed when the script has been run normally again.       #
 # version 0.10 by geimist       29.04.2025 / DSM 7.2    ➜ improved timout                                                                       #
 # version 0.10.1 by geimist     29.04.2025 / DSM 7.2    ➜ minor bugfixes                                                                       #
-# version 0.11 by geimist       16.08.2026 / DSM 7.2    ➜ fix: trap/exit-codes, pipefail, SQL-guard, IPv4-validation order, GeoIP batch        #
+# version 0.11 by geimist       16.08.2026 / DSM 7.4    ➜ fix: trap/exit-codes, pipefail, SQL-guard, IPv4-validation order, GeoIP batch        #
 #                                                                                                                                               #
 #################################################################################################################################################
 
