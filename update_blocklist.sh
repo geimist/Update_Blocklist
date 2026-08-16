@@ -20,6 +20,7 @@
 # version 0.9.1 by geimist      24.03.2024 / DSM 7.2    ➜ An additional message is displayed when the script has been run normally again.       #
 # version 0.10 by geimist       29.04.2025 / DSM 7.2    ➜ improved timout                                                                       #
 # version 0.10.1 by geimist     29.04.2025 / DSM 7.2    ➜ minor bugfixes                                                                       #
+# version 0.11 by geimist       16.08.2026 / DSM 7.2    ➜ fix: trap/exit-codes, pipefail, SQL-guard, IPv4-validation order, GeoIP batch        #
 #                                                                                                                                               #
 #################################################################################################################################################
 
@@ -58,6 +59,9 @@ if [ "$(whoami)" != "root" ]; then
     exit 1
 fi
 
+# Pipeline-Exit-Status zuverlässig auswerten (z. B. Download-Fehler erkennen)
+set -o pipefail
+
 # Python3 Environment for GeoIP:
     own_path="${0%/*}"
     python3_env="${own_path}/update_blocklist_python3_env"
@@ -65,7 +69,10 @@ fi
     python_module_list=( geoip2 )
 
     if [ "${useGeoIP}" = blockonly ] || [ "${useGeoIP}" = blockother ]; then
-        if [ ! "$(which python3)" ]; then
+        if [ ! -f "${GeoIP_DB}" ]; then
+            echo "(GeoIP database not found at ${GeoIP_DB} / GeoIP filter disabled)"
+            useGeoIP=off
+        elif [ ! "$(which python3)" ]; then
             echo "(Python3 is not installed / GeoIP filter disabled)"
             useGeoIP=off
         else
@@ -152,12 +159,23 @@ function_exit() {
     fi
 }
 
-request_GeoIP() {
-    {   echo 'import geoip2.database'
-        echo "with geoip2.database.Reader('${GeoIP_DB}') as reader:"
-        echo "    response = reader.city('$1')"
-        echo "    print(response.country.iso_code)"
-    } | python3 2>&1
+setup_geoip_batch() {
+    # Erzeugt ein Python-Helper-Skript, das alle IPs in einem einzigen Prozess
+    # gegen die GeoIP-Datenbank prüft (statt pro IP einen Python-Prozess zu starten).
+    cat > "${1}" <<'PYEOF'
+import sys, geoip2.database
+with geoip2.database.Reader(sys.argv[1]) as reader:
+    for line in sys.stdin:
+        ip = line.strip()
+        if not ip:
+            continue
+        try:
+            print(f"{ip}\t{reader.city(ip).country.iso_code}")
+        except geoip2.errors.AddressNotFoundError:
+            print(f"{ip}\tempty")
+        except Exception:
+            print(f"{ip}\tempty")
+PYEOF
 }
 
 progressbar() {
@@ -202,7 +220,7 @@ sec_to_time() {
 # create temporary working directory & prepare variables
 # ---------------------------------------------------------------------
     work_tmp=$(mktemp -d -t tmp.XXXXXXXXXX)
-    trap 'rm -rf "${work_tmp}"; exit' EXIT
+    trap 'rm -rf "${work_tmp}"' EXIT
 
     before_list="${work_tmp}/before.txt"
     online_list="${work_tmp}/online_list.txt"
@@ -220,7 +238,7 @@ sec_to_time() {
         UNIXTIME_DELETE_IP=$(date -d "+${DELETE_IP_AFTER} days" +%s) 
     fi
     
-    [ ! -f "${db_path}" ] && sqlite3 "${db_path}" 'CREATE TABLE AutoBlockIP(IP varchar(50) PRIMARY KEY,RecordTime date NOT NULL,ExpireTime date NOT NULL,Deny boolean NOT NULL,IPStd varchr(50) NOT NULL,Type INTEGER,Meta varchar(256))'
+    [ ! -f "${db_path}" ] && sqlite3 "${db_path}" 'CREATE TABLE AutoBlockIP(IP varchar(50) PRIMARY KEY,RecordTime date NOT NULL,ExpireTime date NOT NULL,Deny boolean NOT NULL,IPStd varchar(50) NOT NULL,Type INTEGER,Meta varchar(256))'
 
 # count blocked IPs before:
     countbefore=$(sqlite3 "${db_path}" "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )
@@ -230,7 +248,7 @@ sec_to_time() {
     sqlite3 "${db_path}" "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' AND NOT ExpireTime='0' "
 
 # current IP-list:
-    sqlite3 -header -csv "${db_path}" "select IP FROM AutoBlockIP WHERE Deny='1' ORDER BY 'IP' ASC;" | sed -e '1d' | sort > "${before_list}"
+    sqlite3 -header -csv "${db_path}" "select IP FROM AutoBlockIP WHERE Deny='1' ORDER BY IP ASC;" | sed -e '1d' | sort > "${before_list}"
 
 # load online IP-list:
     while [ "${attempts}" -lt "${MAX_ATTEMPTS}" ]; do
@@ -270,19 +288,33 @@ sec_to_time() {
     # ggf. "INSERT OR REPLACE INTO ..." https://www.sqlite.org/lang_insert.html
     echo "INSERT OR IGNORE INTO AutoBlockIP ('IP', 'RecordTime', 'ExpireTime', 'Deny', 'IPStd', 'Type', 'Meta') VALUES " > "${sql_statement}"
 
+# GeoIP: alle Diffs in EINEM Python-Prozess prüfen (statt pro IP) und in Map ablegen
+    declare -A geoip_map
+    if [ "${useGeoIP}" = blockonly ] || [ "${useGeoIP}" = blockother ]; then
+        geoip_helper="${work_tmp}/geoip_lookup.py"
+        geoip_results="${work_tmp}/geoip_results.txt"
+        setup_geoip_batch "${geoip_helper}"
+        grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" "${blocklist_list}" \
+            | python3 "${geoip_helper}" "${GeoIP_DB}" > "${geoip_results}"
+        while IFS=$'\t' read -r gip gcountry; do
+            geoip_map["${gip}"]="${gcountry}"
+        done < "${geoip_results}"
+    fi
+
 
 while read -r BLOCKED_IP ; do
 
-    # Check if IP valid 
+    # 1) IPv4 validieren (vor GeoIP, um keine Python-Aufrufe für ungültige IPs zu verschwenden)
     VALID_IPv4=$(echo "${BLOCKED_IP}" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l) 
 
-    # check GeoIP
+    if [[ "${VALID_IPv4}" -ne 1 ]]; then
+        [ "${LOGLEVEL}" -eq 2 ] && echo "skip invalid IP: ${BLOCKED_IP}"
+        continue
+    fi
+
+    # 2) GeoIP-Filter (Lookup aus vorberechneter Map)
     if [ "${useGeoIP}" = blockonly ] || [ "${useGeoIP}" = blockother ]; then
-        request_GeoIP_result="$(request_GeoIP "${BLOCKED_IP}")"
-        if grep -qi "is not in the database" <<< "${request_GeoIP_result}" ; then
-            # is not in the database
-            request_GeoIP_result="empty"
-        fi
+        request_GeoIP_result="${geoip_map[${BLOCKED_IP}]:-empty}"
 
         if [ "${useGeoIP}" = blockonly ] && echo "${countries[@]}" | grep -qiv "${request_GeoIP_result}" ; then
             skipByGeoIP=$((skipByGeoIP+1))
@@ -297,30 +329,31 @@ while read -r BLOCKED_IP ; do
         fi
     fi
 
-    # prepare sql statement
-    if [[ "${VALID_IPv4}" -eq 1 ]]; then 
-        # Convert IPv4 to IPv6 :) 
-        IPv4="${BLOCKED_IP//./ }"
-        # shellcheck disable=SC2086,SC2183
-        IPv6=$(printf "0000:0000:0000:0000:0000:FFFF:%02X%02X:%02X%02X" ${IPv4})
+    # 3) SQL-Zeile erzeugen
+    # Convert IPv4 to IPv6 :) 
+    IPv4="${BLOCKED_IP//./ }"
+    # shellcheck disable=SC2086,SC2183
+    IPv6=$(printf "0000:0000:0000:0000:0000:FFFF:%02X%02X:%02X%02X" ${IPv4})
 
-        echo "('${BLOCKED_IP}','${UNIXTIME}','${UNIXTIME_DELETE_IP}','${Deny}','${IPv6}','${TYPE}','${META}')," >> "${sql_statement}"
-        countadded=$((countadded + 1))
+    echo "('${BLOCKED_IP}','${UNIXTIME}','${UNIXTIME_DELETE_IP}','${Deny}','${IPv6}','${TYPE}','${META}')," >> "${sql_statement}"
+    countadded=$((countadded + 1))
 
-        if [ "${LOGLEVEL}" -eq 2 ]; then 
-            echo "IP added to Database!    -->  ${BLOCKED_IP}" 
-        elif [ "${LOGLEVEL}" -eq 1 ] && [ "${PROGRESSBAR}" -eq 1 ]; then
-            # progressbar:
-            progress_start=$((progress_start+1))
-            progressbar "${progress_start}" "${progress_end}"
-        fi
+    if [ "${LOGLEVEL}" -eq 2 ]; then
+        echo "IP added to Database!    -->  ${BLOCKED_IP}"
+    elif [ "${LOGLEVEL}" -eq 1 ] && [ "${PROGRESSBAR}" -eq 1 ]; then
+        # progressbar:
+        progress_start=$((progress_start+1))
+        progressbar "${progress_start}" "${progress_end}"
     fi
 
 done < "${blocklist_list}"
 
-if [ "${countofdiffs}" -ge 1 ] ; then
-    last_entry=$(tail -n1 "${sql_statement}")
-    sed -i  "s/${last_entry}/${last_entry%,};/g" "${sql_statement}"
+# SQL nur schreiben, wenn tatsächlich Zeilen hinzugefügt wurden (sonst Syntaxfehler)
+if [ "${countadded}" -ge 1 ] ; then
+    # Trailing-Komma entfernen und Statement mit ; abschließen
+    # (sicher ohne sed-Regex, da IP/META Sonderzeichen enthalten können)
+    sql_content=$(cat "${sql_statement}")
+    printf '%s;\n' "${sql_content%,}" > "${sql_statement}"
     printf "\n\nwrite DB ...\n"
     sqlite3 "${db_path}" < "${sql_statement}"
 fi
