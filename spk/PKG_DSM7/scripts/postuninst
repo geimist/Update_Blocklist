@@ -1,0 +1,69 @@
+#!/bin/sh
+# DSM löscht target und tmp, behält aber var/etc/home
+# (@appdata, @appconf, @apphome). Dieses Skript läuft auch beim Upgrade;
+# dort ist der Status UPGRADE und die Daten bleiben erhalten.
+
+if [ "${SYNOPKG_PKG_STATUS}" != "UNINSTALL" ] || [ -n "${SYNOPKG_TEMP_UPGRADE_FOLDER}" ]; then
+    exit 0
+fi
+
+name=${SYNOPKG_PKGNAME:-}
+case "$name" in
+    ''|*[!A-Za-z0-9_.-]*)
+        exit 0
+        ;;
+esac
+
+resolve() {
+    p=$1
+    if [ -L "$p" ]; then
+        t=$(readlink "$p") || return 1
+        case "$t" in
+            /*) printf '%s\n' "$t" ;;
+            *) printf '%s\n' "$(dirname "$p")/$t" ;;
+        esac
+        return 0
+    fi
+    printf '%s\n' "$p"
+}
+
+remove_data() {
+    dir=$1
+    [ -n "$dir" ] || return 0
+    case "$dir" in
+        /volume[1-9]/@appdata/"$name"|\
+        /volume[1-9]/@appconf/"$name"|\
+        /volume[1-9]/@apphome/"$name"|\
+        /volume[1-9][0-9]/@appdata/"$name"|\
+        /volume[1-9][0-9]/@appconf/"$name"|\
+        /volume[1-9][0-9]/@apphome/"$name"|\
+        /usr/local/packages/@appdata/"$name"|\
+        /usr/local/packages/@apphome/"$name"|\
+        /usr/syno/etc/packages/"$name")
+            [ -e "$dir" ] || [ -L "$dir" ] || return 0
+            rm -rf "$dir"
+            ;;
+    esac
+}
+
+consider() {
+    raw=$1
+    [ -n "$raw" ] || return 0
+    [ -e "$raw" ] || [ -L "$raw" ] || return 0
+    target=$(resolve "$raw") || return 0
+    remove_data "$target"
+}
+
+vol=${SYNOPKG_PKGDEST_VOL:-}
+if [ -n "$vol" ]; then
+    remove_data "${vol}/@appdata/${name}"
+    remove_data "${vol}/@appconf/${name}"
+    remove_data "${vol}/@apphome/${name}"
+fi
+
+consider "/var/packages/${name}/var"
+consider "/var/packages/${name}/etc"
+consider "/var/packages/${name}/home"
+consider "${SYNOPKG_PKGVAR:-}"
+
+exit 0

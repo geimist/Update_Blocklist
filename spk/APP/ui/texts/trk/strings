@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="IP engelleme listelerini otomatik olarak DSM IP engelleme listesine aktarır."
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="Engelleme listesi art arda {0} kez yüklenemedi."
+msg_import_recovered="Engelleme listesi yeniden yüklenebildi."
+help_import_failed="Engelleme listesi art arda birkaç kez indirilemediğinde gönderilir. Liste URL'sini, ağ erişimini ve paket günlüğünü kontrol edin."
+help_import_recovered="Bir hatadan sonra engelleme listesi yeniden indirilebildiğinde gönderilir."

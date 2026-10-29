@@ -1,0 +1,43 @@
+#!/bin/sh
+PKG_VAR="/var/packages/${SYNOPKG_PKGNAME}/var"
+TARGET="/var/packages/${SYNOPKG_PKGNAME}/target"
+PID="$PKG_VAR/scheduler.pid"
+
+running() {
+    [ -f "$PID" ] || return 1
+    kill -0 "$(cat "$PID")" 2>/dev/null
+}
+
+case "$1" in
+    start)
+        mkdir -p "$PKG_VAR/log" "$PKG_VAR/tmp" "$PKG_VAR/db_backups"
+        if running; then
+            exit 0
+        fi
+        log="$PKG_VAR/log/scheduler.log"
+        if [ -f "$log" ]; then
+            lines=$(wc -l < "$log" | tr -d ' ')
+            if [ "${lines:-0}" -gt 5000 ]; then
+                tail -n 5000 "$log" > "${log}.tmp" && mv "${log}.tmp" "$log"
+            fi
+        fi
+        nohup "$TARGET/bin/autoban-scheduler.sh" >> "$log" 2>&1 &
+        exit 0
+        ;;
+    stop)
+        if running; then
+            kill "$(cat "$PID")" 2>/dev/null || true
+        fi
+        rm -f "$PID"
+        exit 0
+        ;;
+    status)
+        if running; then
+            exit 0
+        fi
+        exit 3
+        ;;
+    *)
+        exit 1
+        ;;
+esac

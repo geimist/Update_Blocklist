@@ -1,0 +1,5 @@
+{
+  "usr-local-linker": {
+    "bin": ["bin/update_blocklist.sh"]
+  }
+}

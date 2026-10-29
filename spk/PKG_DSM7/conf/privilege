@@ -1,0 +1,33 @@
+{
+  "defaults": {
+    "run-as": "package"
+  },
+  "username": "AutoBan",
+  "join-groupname": "system",
+  "tool": [
+    {
+      "relpath": "bin/helper/ab-helper-x86_64",
+      "user": "root",
+      "group": "package",
+      "permission": "6550"
+    },
+    {
+      "relpath": "bin/helper/ab-helper-i686",
+      "user": "root",
+      "group": "package",
+      "permission": "6550"
+    },
+    {
+      "relpath": "bin/helper/ab-helper-armv7",
+      "user": "root",
+      "group": "package",
+      "permission": "6550"
+    },
+    {
+      "relpath": "bin/helper/ab-helper-aarch64",
+      "user": "root",
+      "group": "package",
+      "permission": "6550"
+    }
+  ]
+}

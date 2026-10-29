@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="IP ブロックリストを DSM の IP ブロックリストへ自動的に取り込みます。"
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="ブロックリストを連続で {0} 回読み込めませんでした。"
+msg_import_recovered="ブロックリストを再び読み込めました。"
+help_import_failed="ブロックリストを連続して何度もダウンロードできなかったときに送られます。リスト URL、ネットワーク、パッケージのログを確認してください。"
+help_import_recovered="失敗のあと、ブロックリストを再びダウンロードできたときに送られます。"

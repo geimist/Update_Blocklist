@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="Importerar automatiskt IP-blocklistor till DSMs IP-blocklista."
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="Blocklistan kunde inte hämtas {0} gånger i rad."
+msg_import_recovered="Blocklistan kunde hämtas igen."
+help_import_failed="Skickas när blocklistan inte kunde hämtas flera gånger i rad. Kontrollera list-URL:en, nätverksåtkomsten och paketloggen."
+help_import_recovered="Skickas när blocklistan kunde hämtas igen efter ett fel."

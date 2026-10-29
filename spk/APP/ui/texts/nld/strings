@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="Importeert automatisch IP-blokkeerlijsten in de IP-blokkeerlijst van DSM."
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="De blokkeerlijst kon {0} keer achter elkaar niet worden geladen."
+msg_import_recovered="De blokkeerlijst kon weer worden geladen."
+help_import_failed="Verschijnt wanneer de blokkeerlijst meerdere keren achter elkaar niet kon worden gedownload. Controleer de lijst-URL, de netwerktoegang en het pakketlogboek."
+help_import_recovered="Verschijnt wanneer de blokkeerlijst na een fout weer kon worden gedownload."

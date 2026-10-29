@@ -22,6 +22,7 @@
 # version 0.10.1 by geimist     29.04.2025 / DSM 7.2    ➜ minor bugfixes                                                                       #
 # version 0.11 by geimist       16.08.2026 / DSM 7.4    ➜ fix: trap/exit-codes, pipefail, SQL-guard, IPv4-validation order, GeoIP batch        #
 # version 0.12 by geimist       28.10.2026 / DSM 7.4    ➜ exit 1/2 only after consecutive failures / successes                                  #
+# version 0.13 by geimist       29.10.2026 / DSM 7.4    ➜ optional IPv6 import (IMPORT_IPV6=1), off by default                                  #
 #                                                                                                                                               #
 #################################################################################################################################################
 
@@ -31,6 +32,8 @@
     BLOCKLIST_TYP="all" 
 # Delete IP after x Day's OR use 0 for permanent block 
     DELETE_IP_AFTER=7
+# 0 = IPv4 only / 1 = also import IPv6
+    IMPORT_IPV6=0
 # Loglevel 1: Show Stats at the bottom / Loglevel 2: Show all / Loglevel 0: disable
     LOGLEVEL=1
     PROGRESSBAR=0
@@ -88,8 +91,7 @@ set -o pipefail
     [ "${own_path}" = "${0}" ] && own_path="."
     python3_env="${own_path}/update_blocklist_python3_env"
 
-# region agent log
-# Performance-Instrumentierung (DEBUG_PERF=1): misst Phasen für langsame NAS (z. B. DS115j)
+# Performance-Instrumentierung (DEBUG_PERF=1): Phasen-Timing als NDJSON + [PERF] auf stderr
 _perf_now_ms() {
     local t
     t=$(date +%s%3N 2>/dev/null) || true
@@ -102,7 +104,6 @@ _perf_now_ms() {
 _perf_phase_start_ms=0
 _perf_run_id="run_$(date +%s)"
 _perf_log_file=""
-_perf_cursor_log="/Users/stephangeisler/Documents/Computer/Code_Projekte/GitHub/Update_Blocklist/.cursor/debug-71e9ce.log"
 perf_init() {
     [ "${DEBUG_PERF}" = 1 ] || return 0
     if [ -n "${DEBUG_PERF_LOG}" ]; then
@@ -112,13 +113,13 @@ perf_init() {
     fi
     : > "${_perf_log_file}" 2>/dev/null || _perf_log_file="/tmp/update_blocklist_perf.ndjson"
     : > "${_perf_log_file}"
-    perf_log "H0" "perf_init" "perf logging started" "logFile=${_perf_log_file}" "bash=${BASH_VERSION:-unknown}" "host=$(uname -n 2>/dev/null || echo unknown)" "arch=$(uname -m 2>/dev/null || echo unknown)"
+    perf_log "init" "start" "logFile=${_perf_log_file}" "bash=${BASH_VERSION:-unknown}" "host=$(uname -n 2>/dev/null || echo unknown)" "arch=$(uname -m 2>/dev/null || echo unknown)"
 }
 perf_log() {
-    # usage: perf_log hypothesisId location message [key=value ...]
+    # usage: perf_log phase event [key=value ...]
     [ "${DEBUG_PERF}" = 1 ] || return 0
-    local hyp="$1" loc="$2" msg="$3"
-    shift 3
+    local phase="$1" event="$2"
+    shift 2
     local ts data_json pair k v first=1
     ts=$(_perf_now_ms)
     data_json="{"
@@ -135,33 +136,28 @@ perf_log() {
         data_json+="\"${k}\":\"${v}\""
     done
     data_json+="}"
-    local line
-    line=$(printf '{"sessionId":"71e9ce","runId":"%s","hypothesisId":"%s","location":"%s","message":"%s","data":%s,"timestamp":%s}' \
-        "${_perf_run_id}" "${hyp}" "${loc}" "${msg}" "${data_json}" "${ts}")
-    printf '%s\n' "${line}" >> "${_perf_log_file}" 2>/dev/null || true
-    # Cursor-Debug-Sink (nur wenn lokal vorhanden/schreibbar)
-    printf '%s\n' "${line}" >> "${_perf_cursor_log}" 2>/dev/null || true
+    printf '{"runId":"%s","phase":"%s","event":"%s","data":%s,"timestamp":%s}\n' \
+        "${_perf_run_id}" "${phase}" "${event}" "${data_json}" "${ts}" >> "${_perf_log_file}" 2>/dev/null || true
 }
 perf_phase_begin() {
     [ "${DEBUG_PERF}" = 1 ] || return 0
     _perf_phase_start_ms=$(_perf_now_ms)
-    perf_log "$1" "$2" "phase begin: $3" "phase=$3"
+    perf_log "$1" "begin"
 }
 perf_phase_end() {
     [ "${DEBUG_PERF}" = 1 ] || return 0
-    local hyp="$1" loc="$2" phase="$3"
-    shift 3
+    local phase="$1"
+    shift
     local now dur
     now=$(_perf_now_ms)
     dur=$((now - _perf_phase_start_ms))
-    perf_log "${hyp}" "${loc}" "phase end: ${phase}" "phase=${phase}" "durationMs=${dur}" "$@"
+    perf_log "${phase}" "end" "durationMs=${dur}" "$@"
     printf '[PERF] %-28s %8s ms' "${phase}" "${dur}" >&2
     if [ "$#" -gt 0 ]; then
         printf '  (%s)' "$*" >&2
     fi
     printf '\n' >&2
 }
-# endregion
     python_env_version=1        # is written to an info file after setting up the python env to skip a full check of the python env on each run
     python_module_list=( geoip2 )
 
@@ -353,6 +349,239 @@ sec_to_time() {
     seconds=$(( seconds % 60 ))
     printf "%s%02d:%02d:%02d" "$sign" $hours $minutes $seconds
 }
+filter_addrs() {
+    # list writes canonical addresses. sql writes one INSERT statement.
+    # IPv6 stays out unless IMPORT_IPV6=1. sql reads AB_RECORD, AB_EXPIRE, AB_DENY, AB_TYPE, AB_META.
+    local job="$1" use6=0
+    [ "${IMPORT_IPV6}" = 1 ] && use6=1
+    awk -v ipv6="$use6" -v job="$job" '
+function hexdigits(n, width,    digits, out, d, v) {
+    digits = "0123456789abcdef"
+    v = n + 0
+    out = ""
+    if (v < 0) v = 0
+    if (v == 0) out = "0"
+    while (v > 0) {
+        d = v % 16
+        out = substr(digits, d + 1, 1) out
+        v = int(v / 16)
+    }
+    while (width > 0 && length(out) < width) out = "0" out
+    return out
+}
+function hexup(n, width,    s, i, c, up) {
+    s = hexdigits(n, width)
+    up = ""
+    for (i = 1; i <= length(s); i++) {
+        c = substr(s, i, 1)
+        if (c >= "a" && c <= "f") c = substr("ABCDEF", index("abcdef", c), 1)
+        up = up c
+    }
+    return up
+}
+function is_ipv4(s,    a, i, n, v, ch, c) {
+    n = split(s, a, ".")
+    if (n != 4) return 0
+    for (i = 1; i <= 4; i++) {
+        if (a[i] == "" || length(a[i]) > 3) return 0
+        v = 0
+        for (ch = 1; ch <= length(a[i]); ch++) {
+            c = substr(a[i], ch, 1)
+            if (c < "0" || c > "9") return 0
+            v = v * 10 + (c - "0")
+        }
+        if (v > 255) return 0
+        a[i] = v
+    }
+    return 1
+}
+function v4_text(s,    a) {
+    split(s, a, ".")
+    return (a[1] + 0) "." (a[2] + 0) "." (a[3] + 0) "." (a[4] + 0)
+}
+function v4_std(s,    a) {
+    split(s, a, ".")
+    return "0000:0000:0000:0000:0000:FFFF:" hexup(a[1] + 0, 2) hexup(a[2] + 0, 2) ":" hexup(a[3] + 0, 2) hexup(a[4] + 0, 2)
+}
+function parse_v6(s, g, head, tail,    pos, n, seen, hn, tn, i, v, digits, c, h, v1, v2, zeros, idx, dot, oct, a) {
+    if (s == "" || index(s, "%") > 0 || length(s) > 45 || index(s, ":") == 0) return 0
+    n = length(s)
+    pos = 1
+    seen = 0
+    hn = 0
+    tn = 0
+    if (substr(s, 1, 1) == ":") {
+        if (substr(s, 2, 1) != ":") return 0
+        seen = 1
+        pos = 3
+        if (pos > n) {
+            for (i = 1; i <= 8; i++) g[i] = 0
+            return 1
+        }
+    }
+    while (pos <= n) {
+        if (substr(s, pos, 1) == ":") return 0
+        dot = 0
+        for (i = pos; i <= n; i++) {
+            c = substr(s, i, 1)
+            if (c == ":") break
+            if (c == ".") { dot = 1; break }
+        }
+        if (dot) {
+            oct = substr(s, pos)
+            if (!is_ipv4(oct)) return 0
+            split(oct, a, ".")
+            v1 = (a[1] + 0) * 256 + (a[2] + 0)
+            v2 = (a[3] + 0) * 256 + (a[4] + 0)
+            if (seen) {
+                if (tn > 6) return 0
+                tn++; tail[tn] = v1
+                tn++; tail[tn] = v2
+            } else {
+                if (hn > 6) return 0
+                hn++; head[hn] = v1
+                hn++; head[hn] = v2
+            }
+            break
+        }
+        v = 0
+        digits = 0
+        while (pos <= n) {
+            c = tolower(substr(s, pos, 1))
+            h = index("0123456789abcdef", c)
+            if (h == 0) break
+            v = v * 16 + (h - 1)
+            digits++
+            pos++
+            if (digits > 4) return 0
+        }
+        if (digits == 0) return 0
+        if (seen) {
+            if (tn >= 8) return 0
+            tn++
+            tail[tn] = v
+        } else {
+            if (hn >= 8) return 0
+            hn++
+            head[hn] = v
+        }
+        if (pos > n) break
+        if (substr(s, pos, 1) != ":") return 0
+        pos++
+        if (pos <= n && substr(s, pos, 1) == ":") {
+            if (seen) return 0
+            seen = 1
+            pos++
+            if (pos > n) break
+        } else if (pos > n) return 0
+    }
+    if (!seen) {
+        if (hn != 8) return 0
+        for (i = 1; i <= 8; i++) g[i] = head[i]
+        return 1
+    }
+    if (hn + tn > 7) return 0
+    zeros = 8 - hn - tn
+    idx = 1
+    for (i = 1; i <= hn; i++) { g[idx] = head[i]; idx++ }
+    for (i = 1; i <= zeros; i++) { g[idx] = 0; idx++ }
+    for (i = 1; i <= tn; i++) { g[idx] = tail[i]; idx++ }
+    return idx == 9
+}
+function is_mapped(g) {
+    return g[1] == 0 && g[2] == 0 && g[3] == 0 && g[4] == 0 && g[5] == 0 && g[6] == 65535
+}
+function mapped_v4(g) {
+    return int(g[7] / 256) "." (g[7] % 256) "." int(g[8] / 256) "." (g[8] % 256)
+}
+function canon_v6(g,    i, j, best, bestlen, len, out, need) {
+    best = -1
+    bestlen = 0
+    i = 1
+    while (i <= 8) {
+        if (g[i] != 0) { i++; continue }
+        j = i
+        while (j <= 8 && g[j] == 0) j++
+        len = j - i
+        if (len > bestlen) { best = i; bestlen = len }
+        i = j
+    }
+    if (bestlen < 2) best = -1
+    out = ""
+    need = 0
+    i = 1
+    while (i <= 8) {
+        if (best > 0 && i == best) {
+            out = out ":"
+            i += bestlen
+            if (i > 8) { out = out ":"; break }
+            out = out ":"
+            need = 0
+            continue
+        }
+        if (need) out = out ":"
+        out = out hexdigits(g[i], 0)
+        need = 1
+        i++
+    }
+    return out
+}
+function v6_std(g) {
+    return hexup(g[1], 4) ":" hexup(g[2], 4) ":" hexup(g[3], 4) ":" hexup(g[4], 4) ":" hexup(g[5], 4) ":" hexup(g[6], 4) ":" hexup(g[7], 4) ":" hexup(g[8], 4)
+}
+function canonical(s, stdp, g,    ip) {
+    sub(/\r$/, "", s)
+    if (index(s, ":") == 0) {
+        if (!is_ipv4(s)) return ""
+        ip = v4_text(s)
+        stdp[0] = v4_std(ip)
+        return ip
+    }
+    if (!parse_v6(s, g)) return ""
+    if (is_mapped(g)) {
+        ip = mapped_v4(g)
+        stdp[0] = v4_std(ip)
+        return ip
+    }
+    if (ipv6 != 1) return ""
+    ip = canon_v6(g)
+    stdp[0] = v6_std(g)
+    return ip
+}
+BEGIN {
+    n = 0
+    if (job == "sql") {
+        rec = ENVIRON["AB_RECORD"]
+        expire = ENVIRON["AB_EXPIRE"]
+        denyv = ENVIRON["AB_DENY"]
+        typ = ENVIRON["AB_TYPE"]
+        meta = ENVIRON["AB_META"]
+        gsub(/\047/, "\047\047", meta)
+    }
+}
+{
+    line = $0
+    sub(/^[ \t]+/, "", line)
+    sub(/[ \t]+$/, "", line)
+    if (line == "") next
+    ip = canonical(line, std)
+    if (ip == "") next
+    if (job == "sql") {
+        n++
+        if (n == 1)
+            printf "INSERT OR IGNORE INTO AutoBlockIP (IP, RecordTime, ExpireTime, Deny, IPStd, Type, Meta) VALUES "
+        else
+            printf ","
+        printf "(\047%s\047,\047%s\047,\047%s\047,\047%s\047,\047%s\047,\047%s\047,\047%s\047)", ip, rec, expire, denyv, std[0], typ, meta
+    } else
+        print ip
+}
+END {
+    if (job == "sql" && n > 0) printf ";\n"
+}
+'
+}
+
 # create temporary working directory & prepare variables
 # ---------------------------------------------------------------------
     work_tmp=$(mktemp -d -t tmp.XXXXXXXXXX)
@@ -377,25 +606,25 @@ sec_to_time() {
     [ ! -f "${db_path}" ] && sqlite3 "${db_path}" 'CREATE TABLE AutoBlockIP(IP varchar(50) PRIMARY KEY,RecordTime date NOT NULL,ExpireTime date NOT NULL,Deny boolean NOT NULL,IPStd varchar(50) NOT NULL,Type INTEGER,Meta varchar(256))'
 
 # count blocked IPs before:
-    perf_phase_begin "A" "sqlite:countbefore" "sqlite_count_before"
+    perf_phase_begin "sqlite_count_before"
     countbefore=$(sqlite3 "${db_path}" "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )
-    perf_phase_end "A" "sqlite:countbefore" "sqlite_count_before" "countbefore=${countbefore}"
+    perf_phase_end "sqlite_count_before" "countbefore=${countbefore}"
 
 # delete IP if expired: 
-    perf_phase_begin "A" "sqlite:delete_expired" "sqlite_delete_expired"
+    perf_phase_begin "sqlite_delete_expired"
     CountExpiredIP=$(sqlite3 "${db_path}" "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' AND NOT ExpireTime='0' ")
     sqlite3 "${db_path}" "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' AND NOT ExpireTime='0' "
-    perf_phase_end "A" "sqlite:delete_expired" "sqlite_delete_expired" "expired=${CountExpiredIP}"
+    perf_phase_end "sqlite_delete_expired" "expired=${CountExpiredIP}"
 
 # current IP-list:
-    perf_phase_begin "A" "sqlite:export_before" "sqlite_export_before_list"
+    perf_phase_begin "sqlite_export_before_list"
     sqlite3 -header -csv "${db_path}" "select IP FROM AutoBlockIP WHERE Deny='1' ORDER BY IP ASC;" | sed -e '1d' | sort > "${before_list}"
     _before_lines=$(wc -l < "${before_list}" | tr -d ' ')
     _db_bytes=$(wc -c < "${db_path}" 2>/dev/null | tr -d ' ')
-    perf_phase_end "A" "sqlite:export_before" "sqlite_export_before_list" "beforeLines=${_before_lines}" "dbBytes=${_db_bytes:-0}"
+    perf_phase_end "sqlite_export_before_list" "beforeLines=${_before_lines}" "dbBytes=${_db_bytes:-0}"
 
 # load online IP-list:
-    perf_phase_begin "C" "download:blocklist" "download_blocklist"
+    perf_phase_begin "download_blocklist"
     while [ "${attempts}" -lt "${MAX_ATTEMPTS}" ]; do
         timeout 60 wget -q --timeout=10 --tries=5 -nv -O - "https://lists.blocklist.de/lists/${BLOCKLIST_TYP}.txt" | sort | uniq > "${online_list}"
         exit_status=$?
@@ -415,67 +644,62 @@ sec_to_time() {
             fi
         fi
     done
+    [ "${IMPORT_IPV6}" = 1 ] || IMPORT_IPV6=0
+    filter_addrs list < "${online_list}" | sort -u > "${online_list}.norm"
+    mv "${online_list}.norm" "${online_list}"
     _online_lines=$(wc -l < "${online_list}" | tr -d ' ')
     _online_bytes=$(wc -c < "${online_list}" | tr -d ' ')
-    perf_phase_end "C" "download:blocklist" "download_blocklist" "attempts=${attempts}" "onlineLines=${_online_lines}" "onlineBytes=${_online_bytes}"
+    perf_phase_end "download_blocklist" "attempts=${attempts}" "onlineLines=${_online_lines}" "onlineBytes=${_online_bytes}"
 
-    echo "count of IPs in list:         $(grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" "${online_list}" | wc -l)"
+    echo "count of IPs in list:         ${_online_lines}"
 
 # filter diffs - only diffs from left to right:
-    perf_phase_begin "D" "diff:filter" "diff_filter"
+    perf_phase_begin "diff_filter"
     diff "${before_list}" "${online_list}" | grep '^>' | sed -e 's/> //' > "${blocklist_list}" 
-    perf_phase_end "D" "diff:filter" "diff_filter"
+    perf_phase_end "diff_filter"
 
 # count of diffs:
-    countofdiffs=$(grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" "${blocklist_list}" | wc -l)
+    countofdiffs=$(wc -l < "${blocklist_list}" | tr -d ' ')
     echo "${countofdiffs} IPs are different do local block list"
-    perf_log "E" "diff:count" "diff count ready" "countofdiffs=${countofdiffs}" "useGeoIP=${useGeoIP}"
+    perf_log "diff_count" "ready" "countofdiffs=${countofdiffs}" "useGeoIP=${useGeoIP}"
 
 # progressbar / stats:
     progress_start=0
     progress_end="${countofdiffs}"
 
-# beginn sql statement:
-    # ggf. "INSERT OR REPLACE INTO ..." https://www.sqlite.org/lang_insert.html
-    echo "INSERT OR IGNORE INTO AutoBlockIP ('IP', 'RecordTime', 'ExpireTime', 'Deny', 'IPStd', 'Type', 'Meta') VALUES " > "${sql_statement}"
+    : > "${work_tmp}/accepted.txt"
 
 # GeoIP: alle Diffs in EINEM Python-Prozess prüfen (statt pro IP) und in Map ablegen
     declare -A geoip_map
     if [ "${useGeoIP}" = blockonly ] || [ "${useGeoIP}" = blockother ]; then
-        perf_phase_begin "F" "geoip:batch" "geoip_batch_lookup"
+        perf_phase_begin "geoip_batch_lookup"
         geoip_helper="${work_tmp}/geoip_lookup.py"
         geoip_results="${work_tmp}/geoip_results.txt"
         setup_geoip_batch "${geoip_helper}"
-        grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" "${blocklist_list}" \
-            | python3 "${geoip_helper}" "${GeoIP_DB}" > "${geoip_results}"
+        python3 "${geoip_helper}" "${GeoIP_DB}" < "${blocklist_list}" > "${geoip_results}"
         while IFS=$'\t' read -r gip gcountry; do
             geoip_map["${gip}"]="${gcountry}"
         done < "${geoip_results}"
-        perf_phase_end "F" "geoip:batch" "geoip_batch_lookup"
+        perf_phase_end "geoip_batch_lookup"
     fi
 
-# region agent log
 _loop_i=0
 _loop_t0=$(_perf_now_ms)
-perf_phase_begin "E" "loop:ip_process" "loop_process_diffs"
-# endregion
+perf_phase_begin "loop_process_diffs"
 
 while read -r BLOCKED_IP ; do
-    # region agent log
     if [ "${DEBUG_PERF}" = 1 ]; then
         _loop_i=$((_loop_i + 1))
         if [ $((_loop_i % 1000)) -eq 0 ]; then
             _now=$(_perf_now_ms)
-            perf_log "E" "loop:progress" "loop checkpoint" "processed=${_loop_i}" "countadded=${countadded}" "elapsedMs=$((_now - _loop_t0))"
+            perf_log "loop_process_diffs" "checkpoint" "processed=${_loop_i}" "countadded=${countadded}" "elapsedMs=$((_now - _loop_t0))"
             printf '[PERF] loop checkpoint             %8s ms  (processed=%s countadded=%s)\n' "$((_now - _loop_t0))" "${_loop_i}" "${countadded}" >&2
         fi
     fi
-    # endregion
 
-    # 1) IPv4 validieren (vor GeoIP, um keine Python-Aufrufe für ungültige IPs zu verschwenden)
-    VALID_IPv4=$(echo "${BLOCKED_IP}" | grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" | wc -l) 
-
-    if [[ "${VALID_IPv4}" -ne 1 ]]; then
+    # Addresses were normalized above. Anything else is skipped.
+    if [[ ! "${BLOCKED_IP}" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] \
+        && { [ "${IMPORT_IPV6}" != 1 ] || [[ ! "${BLOCKED_IP}" =~ ^[0-9a-f:]+$ ]] || [[ "${BLOCKED_IP}" != *:* ]]; }; then
         [ "${LOGLEVEL}" -eq 2 ] && echo "skip invalid IP: ${BLOCKED_IP}"
         continue
     fi
@@ -497,13 +721,7 @@ while read -r BLOCKED_IP ; do
         fi
     fi
 
-    # 3) SQL-Zeile erzeugen
-    # Convert IPv4 to IPv6 :) 
-    IPv4="${BLOCKED_IP//./ }"
-    # shellcheck disable=SC2086,SC2183
-    IPv6=$(printf "0000:0000:0000:0000:0000:FFFF:%02X%02X:%02X%02X" ${IPv4})
-
-    echo "('${BLOCKED_IP}','${UNIXTIME}','${UNIXTIME_DELETE_IP}','${Deny}','${IPv6}','${TYPE}','${META}')," >> "${sql_statement}"
+    printf '%s\n' "${BLOCKED_IP}" >> "${work_tmp}/accepted.txt"
     countadded=$((countadded + 1))
 
     if [ "${LOGLEVEL}" -eq 2 ]; then
@@ -515,36 +733,30 @@ while read -r BLOCKED_IP ; do
     fi
 
 done < "${blocklist_list}"
-# region agent log
-perf_phase_end "E" "loop:ip_process" "loop_process_diffs" "processed=${_loop_i:-0}" "countadded=${countadded}"
-# endregion
+perf_phase_end "loop_process_diffs" "processed=${_loop_i:-0}" "countadded=${countadded}"
 
 # SQL nur schreiben, wenn tatsächlich Zeilen hinzugefügt wurden (sonst Syntaxfehler)
 if [ "${countadded}" -ge 1 ] ; then
-    # Trailing-Komma entfernen und Statement mit ; abschließen
-    # (sicher ohne sed-Regex, da IP/META Sonderzeichen enthalten können)
-    perf_phase_begin "B" "sqlite:prepare_sql" "sqlite_prepare_sql"
-    sql_content=$(cat "${sql_statement}")
-    printf '%s;\n' "${sql_content%,}" > "${sql_statement}"
+    perf_phase_begin "sqlite_prepare_sql"
+    AB_RECORD="${UNIXTIME}" AB_EXPIRE="${UNIXTIME_DELETE_IP}" AB_DENY="${Deny}" AB_TYPE="${TYPE}" AB_META="${META}" \
+        filter_addrs sql < "${work_tmp}/accepted.txt" > "${sql_statement}"
     _sql_bytes=$(wc -c < "${sql_statement}" | tr -d ' ')
-    perf_phase_end "B" "sqlite:prepare_sql" "sqlite_prepare_sql" "sqlBytes=${_sql_bytes}"
+    perf_phase_end "sqlite_prepare_sql" "sqlBytes=${_sql_bytes}"
     printf "\n\nwrite DB ...\n"
-    perf_phase_begin "B" "sqlite:insert" "sqlite_insert"
+    perf_phase_begin "sqlite_insert"
     sqlite3 "${db_path}" < "${sql_statement}"
-    perf_phase_end "B" "sqlite:insert" "sqlite_insert" "countadded=${countadded}"
+    perf_phase_end "sqlite_insert" "countadded=${countadded}"
 fi
 
-# region agent log
-perf_log "H0" "run:complete" "run finished" "totalSec=$(($(date +%s)-UNIXTIME))" "countofdiffs=${countofdiffs}" "countadded=${countadded}" "countbefore=${countbefore}" "expired=${CountExpiredIP}" "perfLog=${_perf_log_file}"
+perf_log "run" "complete" "totalSec=$(($(date +%s)-UNIXTIME))" "countofdiffs=${countofdiffs}" "countadded=${countadded}" "countbefore=${countbefore}" "expired=${CountExpiredIP}" "perfLog=${_perf_log_file}"
 [ "${DEBUG_PERF}" = 1 ] && printf '[PERF] log file: %s\n' "${_perf_log_file}" >&2
-# endregion
 
 # stats …
 if [ "${LOGLEVEL}" -eq 1 ] || [ "${LOGLEVEL}" -eq 2 ]; then 
     echo -e; echo -e; 
     echo "stats:--------------------------------"
     echo "duration of the process:      $(sec_to_time "$(($(date +%s)-UNIXTIME))" )" 
-    echo "count of IPs in list:         $(grep -Eo "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" "${online_list}" | wc -l)"
+    echo "count of IPs in list:         $(wc -l < "${online_list}" | tr -d ' ')"
     echo "count of diffs:               ${countofdiffs}"
     echo "added IPs:                    ${countadded}"
     echo "IP skipped by GeoIP:          ${skipByGeoIP}"

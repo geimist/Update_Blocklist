@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="Importiert automatisch IP-Sperrlisten in die DSM-IP-Blockliste."
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="Die Blockliste konnte {0} Mal hintereinander nicht geladen werden."
+msg_import_recovered="Die Blockliste konnte wieder geladen werden."
+help_import_failed="Erscheint, wenn die Blockliste mehrmals hintereinander nicht geladen werden konnte. Prüfen Sie die Listen-URL, den Netzzugang und das Paketprotokoll."
+help_import_recovered="Erscheint, wenn die Blockliste nach einem Fehler wieder geladen werden konnte."

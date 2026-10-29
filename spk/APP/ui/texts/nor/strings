@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="Importerer automatisk IP-blokkeringslister til DSMs IP-blokkeringsliste."
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="Blokkeringslisten kunne ikke lastes {0} ganger på rad."
+msg_import_recovered="Blokkeringslisten kunne lastes igjen."
+help_import_failed="Sendes når blokkeringslisten ikke kunne lastes ned flere ganger på rad. Kontroller liste-URL-en, nettverkstilgangen og pakkeloggen."
+help_import_recovered="Sendes når blokkeringslisten igjen kunne lastes ned etter en feil."

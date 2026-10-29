@@ -17,3 +17,23 @@ updates / imports IPs blocked by [blocklist.de](http://www.blocklist.de/de/index
 * due to the fast changing online list, the script runs every 10 minutes for me
 
 ([Source](https://www.synology-forum.de/showthread.html?103687-Freigabe-Blockierliste-automatisch-updaten))
+
+## AutoBan (DSM 7 Paket)
+
+Das Paket **AutoBan** kapselt dasselbe Skript mit Oberfläche, Zeitplan und einem kleinen setuid-Helfer. Das Skript [`update_blocklist.sh`](update_blocklist.sh) bleibt der lesbare Ablauf. Gebaut wird es unter `spk/`. Erstellt mit der Unterstützung von Cursor.
+
+```sh
+spk/build_spk.sh 1.0.0
+```
+
+Dafür werden Go, `rsvg-convert` oder ImageMagick und `fakeroot` benötigt. Das Ergebnis ist `AutoBan_1.0.0.spk` (DSM 7, x86_64, i686, armv7, armv8).
+
+Nach der Installation im Paketzentrum:
+
+- Einstellungen, Läufe, Protokoll und Sicherungen liegen in der AutoBan-Oberfläche.
+- Konfiguration und Statistik: `/var/packages/AutoBan/var/app.db`
+- Protokoll (maximal 1000 Zeilen): `/var/packages/AutoBan/var/log/autoban.log`
+- Sicherungen der Systemdatenbank: `/var/packages/AutoBan/var/db_backups/` (`pristine`, `latest`, `hour`, `day`, `week`, `month`)
+- Nur `ab-helper` schreibt `/etc/synoautoblock.db`. Beim ersten Start prüfen, dass die Datei root gehört und das Setuid-Bit gesetzt ist (`-r-sr-x---`).
+
+Ein bisher per Aufgabenplaner gestartetes Root-Skript kann entfallen, sobald das Paket läuft. Die Standalone-Nutzung des Skripts bleibt möglich.

@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="自动将 IP 封锁列表导入 DSM 的 IP 封锁列表。"
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="封锁列表连续 {0} 次未能加载。"
+msg_import_recovered="封锁列表已可以重新加载。"
+help_import_failed="封锁列表连续多次无法下载时发送。请检查列表 URL、网络连接和套件日志。"
+help_import_recovered="先前失败之后，封锁列表又能下载时发送。"

@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="Automaticky importuje seznamy blokování IP do seznamu blokování IP v DSM."
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="Seznam blokování se nepodařilo načíst {0}krát za sebou."
+msg_import_recovered="Seznam blokování se opět podařilo načíst."
+help_import_failed="Odešle se, když se seznam blokování několikrát za sebou nepodařilo stáhnout. Zkontrolujte URL seznamu, přístup k síti a protokol balíčku."
+help_import_recovered="Odešle se, když se seznam blokování po chybě opět podařilo stáhnout."

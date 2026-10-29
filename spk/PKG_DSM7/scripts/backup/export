@@ -1,0 +1,46 @@
+#!/bin/sh
+# Hyper Backup: Einstellungen und Lauf-Historie (app.db) sowie die
+# Sicherungen der Systemdatenbank. Das Protokoll bleibt draußen.
+. /usr/syno/bin/jsoncmd
+
+PKGVAR="/var/packages/${SYNOPKG_PKGNAME}/var"
+EXPPATH=$(jget "${SYNOPKG_BKP_INPUT}" ".temp_path")
+if [ $? -ne 0 ] || [ -z "${EXPPATH}" ]; then
+    jerr "Failed to get export path"
+    exit 1
+fi
+
+mkdir -p "${EXPPATH}/db_backups"
+
+if [ -f "${PKGVAR}/app.db" ]; then
+    if ! sqlite3 "${PKGVAR}/app.db" ".backup '${EXPPATH}/app.db'"; then
+        cp -f "${PKGVAR}/app.db" "${EXPPATH}/app.db" || {
+            jerr "Failed to export app.db"
+            exit 1
+        }
+    fi
+fi
+
+if [ -d "${PKGVAR}/db_backups" ]; then
+    find "${PKGVAR}/db_backups" -maxdepth 1 -type f ! -name 'slots.mtime' -exec cp -p {} "${EXPPATH}/db_backups/" \;
+    # Dateizeit überlebt Hyper Backup nicht. Die Aufnahmezeit deshalb als Text.
+    : > "${EXPPATH}/db_backups/slots.mtime"
+    for name in pristine latest hour day week month; do
+        src="${PKGVAR}/db_backups/${name}.db"
+        [ -f "${src}" ] || continue
+        ts=$(sqlite3 "${src}" "SELECT at FROM autoban_taken LIMIT 1" 2>/dev/null || true)
+        case "${ts}" in
+            ''|*[!0-9]*) ts=0 ;;
+        esac
+        if [ "${ts}" -eq 0 ]; then
+            ts=$(stat -c %Y "${src}" 2>/dev/null || echo 0)
+        fi
+        [ "${ts}" -gt 0 ] || continue
+        printf '%s %s\n' "${name}" "${ts}" >> "${EXPPATH}/db_backups/slots.mtime"
+    done
+fi
+
+jout_begin
+joutstr "app_data_version" "1.0"
+jout_end
+exit 0

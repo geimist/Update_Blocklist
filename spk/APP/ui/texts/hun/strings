@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="Automatikusan importálja az IP-tiltólistákat a DSM IP-tiltólistájába."
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="A tiltólistát {0} alkalommal egymás után nem sikerült betölteni."
+msg_import_recovered="A tiltólistát ismét sikerült betölteni."
+help_import_failed="Akkor jelenik meg, ha a tiltólistát egymás után többször nem sikerült letölteni. Ellenőrizze a lista URL-címét, a hálózati elérést és a csomag naplóját."
+help_import_recovered="Akkor jelenik meg, ha a tiltólistát egy hiba után ismét sikerült letölteni."

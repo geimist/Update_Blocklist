@@ -1,0 +1,34 @@
+{
+    "autoban.js": {
+        "SYNO.SDS.AutoBan.Application": {
+            "type": "app",
+            "title": "AutoBan",
+            "appWindow": "SYNO.SDS.AutoBan.MainWindow",
+            "desc": "app:app_desc",
+            "icon": "images/icon_{0}.png",
+            "allowMultiInstance": false,
+            "allowStandalone": true,
+            "allUsers": false,
+            "grantPrivilege": "all",
+            "advanceGrantPrivilege": true,
+            "texts": "texts",
+            "preloadTexts": [
+                "app:app_name",
+                "app:app_desc",
+                "app:import_failed",
+                "app:import_recovered",
+                "app:help_import_failed",
+                "app:help_import_recovered"
+            ],
+            "depend": ["SYNO.SDS.AutoBan.MainWindow"]
+        },
+        "SYNO.SDS.AutoBan.MainWindow": {
+            "type": "lib",
+            "title": "AutoBan",
+            "icon": "images/icon_{0}.png",
+            "texts": "texts",
+            "depend": ["SYNO.SDS.AutoBan.Utils"]
+        },
+        "SYNO.SDS.AutoBan.Utils": []
+    }
+}

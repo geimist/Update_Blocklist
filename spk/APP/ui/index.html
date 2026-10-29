@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoBan</title>
+  <link rel="stylesheet" href="app.css?v=1.0.28">
+</head>
+<body>
+  <header>
+    <img src="images/icon_64.png" alt="" width="48" height="48">
+    <div>
+      <h1 data-i18n="lang_app_title">AutoBan</h1>
+      <p data-i18n="lang_app_lead">Importiert Sperrlisten in die DSM-IP-Blockliste.</p>
+    </div>
+    <div class="status-bar">
+      <button type="button" id="reload" class="icon-btn" data-i18n-title="lang_buttonreload" aria-label="Aktualisieren">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/>
+        </svg>
+      </button>
+      <div class="status" id="status"></div>
+    </div>
+  </header>
+  <div id="run-progress" class="run-progress" aria-hidden="true"></div>
+  <main>
+    <section class="howto">
+      <h2 data-i18n="lang_section_howto">Funktionsweise</h2>
+      <p class="howto-text" data-i18n-html="lang_howto_body">Das Paket <em>AutoBan</em> kapselt Skript <a href="https://github.com/geimist/Update_Blocklist" target="_blank" rel="noopener noreferrer">update_blocklist.sh</a> mit Oberfläche, Zeitplan und einem kleinen setuid-Helfer. AutoBan aktualisiert / importiert von <a href="http://www.blocklist.de/de/index.html" target="_blank" rel="noopener noreferrer">blocklist.de</a> gesperrte IPs in die IP-Blocklist des Synology DSM.</p>
+    </section>
+    <section>
+      <h2 data-i18n="lang_section_settings">Einstellungen</h2>
+      <form id="settings">
+        <div class="settings-grid">
+          <label class="check"><input name="scheduler_enabled" type="checkbox"><span data-i18n="lang_scheduler">Zeitplan aktiv</span><button type="button" class="info" data-help="lang_help_scheduler">i</button></label>
+          <label class="interval">
+            <span class="field-label">
+              <span data-i18n="lang_interval">Intervall</span>
+              <button type="button" class="info" data-help="lang_help_interval">i</button>
+              <strong id="interval-label">10 Minuten</strong>
+            </span>
+            <input id="interval-range" type="range" min="0" max="7" step="1" value="2">
+            <input type="hidden" name="interval_minutes" value="10">
+          </label>
+          <label class="delete-after">
+            <span class="field-label"><span data-i18n="lang_delete_after">IP nach Tagen entfernen (0 = dauerhaft)</span><button type="button" class="info" data-help="lang_help_delete_after">i</button></span>
+            <input name="delete_ip_after" type="number" min="0" max="3650" required>
+          </label>
+          <label class="source-url">
+            <span class="field-label">
+              <span data-i18n="lang_source_url">Listen-URL</span>
+              <button type="button" class="info" data-help="lang_help_source_url">i</button>
+              <a class="ext" href="http://www.blocklist.de/de/index.html" target="_blank" rel="noopener noreferrer" data-i18n="lang_source_visit">blocklist.de</a>
+            </span>
+            <input name="source_url" value="https://lists.blocklist.de/lists/all.txt">
+          </label>
+          <label class="blocklist-typ">
+            <span class="field-label"><span data-i18n="lang_blocklist_typ">blocklist.de Typ</span><button type="button" class="info" data-help="lang_help_blocklist_typ">i</button></span>
+            <select name="blocklist_typ">
+              <option>all</option><option>ssh</option><option>mail</option><option>apache</option>
+              <option>imap</option><option>ftp</option><option>sip</option><option>bots</option>
+              <option>strongips</option><option>ircbot</option><option>bruteforcelogin</option>
+            </select>
+          </label>
+          <label class="check"><input name="import_ipv6" type="checkbox"><span data-i18n="lang_import_ipv6">IPv6 importieren</span><button type="button" class="info" data-help="lang_help_import_ipv6">i</button></label>
+        </div>
+        <details>
+          <summary data-i18n="lang_section_advanced">Erweitert</summary>
+          <div class="grid">
+            <label class="wide">
+              <span class="field-label"><span data-i18n="lang_extra_sources">Weitere Quellen (eine URL pro Zeile)</span><button type="button" class="info" data-help="lang_help_extra_sources">i</button></span>
+              <div class="textarea-shell">
+                <textarea name="extra_sources" rows="3" class="resize-y"></textarea>
+              </div>
+            </label>
+            <label><span class="field-label"><span data-i18n="lang_loglevel">Logstufe</span><button type="button" class="info" data-help="lang_help_loglevel">i</button></span>
+              <select name="loglevel"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select>
+            </label>
+            <label><span class="field-label"><span data-i18n="lang_geoip_mode">GeoIP</span><button type="button" class="info" data-help="lang_help_geoip_mode">i</button></span>
+              <select name="geoip_mode"><option value="off">off</option><option value="blockonly">blockonly</option><option value="blockother">blockother</option></select>
+            </label>
+            <label><span class="field-label"><span data-i18n="lang_geoip_countries">Länder (ISO, kommagetrennt)</span><button type="button" class="info" data-help="lang_help_geoip_countries">i</button></span><input name="geoip_countries"></label>
+            <label class="wide"><span class="field-label"><span data-i18n="lang_geoip_db">GeoIP-Datenbank</span><button type="button" class="info" data-help="lang_help_geoip_db">i</button></span><input name="geoip_db"></label>
+            <label><span class="field-label"><span data-i18n="lang_max_attempts">Download-Versuche</span><button type="button" class="info" data-help="lang_help_max_attempts">i</button></span><input name="max_attempts" type="number" min="1" max="20"></label>
+            <label><span class="field-label"><span data-i18n="lang_notify_lang">Benachrichtigungssprache</span><button type="button" class="info" data-help="lang_help_notify_lang">i</button></span>
+              <select name="notify_lang">
+                <option value="ger">Deutsch</option>
+                <option value="enu">English</option>
+                <option value="fre">Français</option>
+                <option value="ita">Italiano</option>
+                <option value="spn">Español</option>
+                <option value="nld">Nederlands</option>
+                <option value="ptg">Português</option>
+                <option value="ptb">Português (Brasil)</option>
+                <option value="dan">Dansk</option>
+                <option value="nor">Norsk</option>
+                <option value="sve">Svenska</option>
+                <option value="plk">Polski</option>
+                <option value="csy">Čeština</option>
+                <option value="hun">Magyar</option>
+                <option value="trk">Türkçe</option>
+                <option value="rus">Русский</option>
+                <option value="chs">简体中文</option>
+                <option value="cht">繁體中文</option>
+                <option value="jpn">日本語</option>
+                <option value="krn">한국어</option>
+              </select>
+            </label>
+            <label><span class="field-label"><span data-i18n="lang_fail_alert">Fehlversuche bis zur Meldung</span><button type="button" class="info" data-help="lang_help_fail_alert">i</button></span><input name="fail_alert_after" type="number" min="1" max="100"></label>
+            <label><span class="field-label"><span data-i18n="lang_recovery_alert">Erfolge bis zur Entwarnung</span><button type="button" class="info" data-help="lang_help_recovery_alert">i</button></span><input name="recovery_alert_after" type="number" min="1" max="100"></label>
+            <label><span class="field-label"><span data-i18n="lang_deny">Liste</span><button type="button" class="info" data-help="lang_help_deny">i</button></span>
+              <select name="deny"><option value="1">1</option><option value="0">0</option></select>
+            </label>
+            <label hidden><span class="field-label"><span data-i18n="lang_type">Adresstyp</span><button type="button" class="info" data-help="lang_help_type">i</button></span><input name="type" type="number" min="0" max="3"></label>
+            <label hidden><span class="field-label"><span data-i18n="lang_meta">Meta (Bereich oder Maske)</span><button type="button" class="info" data-help="lang_help_meta">i</button></span><input name="meta"></label>
+            <label class="check" hidden><input name="progressbar" type="checkbox"><span data-i18n="lang_progress">Fortschrittsbalken im Standalone-Lauf</span><button type="button" class="info" data-help="lang_help_progress">i</button></label>
+            <label class="check"><input name="debug_perf" type="checkbox"><span data-i18n="lang_debug">Performance-Protokoll</span><button type="button" class="info" data-help="lang_help_debug">i</button></label>
+          </div>
+        </details>
+        <div class="actions">
+          <button type="submit" data-i18n="lang_buttonsave">Speichern</button>
+          <button type="button" id="run" data-i18n="lang_buttonrun">Jetzt ausführen</button>
+          <span id="notice" role="status"></span>
+        </div>
+      </form>
+    </section>
+    <section>
+      <h2 data-i18n="lang_section_stats">Läufe</h2>
+      <div class="chart-head">
+        <span class="field-label">
+          <span data-i18n="lang_chart_span">Zeitraum</span>
+          <strong id="chart-span-label">30 Tage</strong>
+        </span>
+        <input id="chart-span" type="range" min="0" max="4" step="1" value="1">
+      </div>
+      <div id="chart" class="chart"></div>
+      <div class="table-wrap runs-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="lang_stats_time">Zeit</th>
+              <th data-i18n="lang_stats_status">Status</th>
+              <th data-i18n="lang_stats_duration">Dauer</th>
+              <th data-i18n="lang_stats_added">Neu</th>
+              <th data-i18n="lang_stats_diffs">Diffs</th>
+              <th data-i18n="lang_stats_expired">Abgelaufen</th>
+              <th data-i18n="lang_stats_online">Online</th>
+              <th data-i18n="lang_stats_before">Vorher</th>
+              <th data-i18n="lang_stats_after">Nachher</th>
+              <th data-i18n="lang_stats_geoip">GeoIP</th>
+            </tr>
+          </thead>
+          <tbody id="runs"></tbody>
+        </table>
+      </div>
+    </section>
+    <section>
+      <h2 data-i18n="lang_section_backup">Sicherungen der Systemdatenbank</h2>
+      <div class="backup-row">
+        <select id="backups"></select>
+        <button type="button" id="restore" class="ghost" data-i18n="lang_buttonrestore">Wiederherstellen</button>
+        <button type="button" id="clearblock" class="danger" data-i18n="lang_buttonclear">Blockliste leeren</button>
+      </div>
+    </section>
+    <section>
+      <h2 data-i18n="lang_section_log">Protokoll</h2>
+      <div class="actions">
+        <button type="button" id="showlog" data-i18n="lang_buttonlog">Protokoll anzeigen</button>
+        <button type="button" id="clearlog" class="ghost" data-i18n="lang_buttonlogclear">Protokoll leeren</button>
+      </div>
+      <pre id="log" hidden></pre>
+    </section>
+    <section>
+      <h2 data-i18n="lang_section_help">Hilfe</h2>
+      <div class="actions">
+        <a id="support" class="btn" data-i18n="lang_buttonsupport" data-i18n-title="lang_help_support">Supportdaten herunterladen</a>
+        <a class="btn ghost" href="https://github.com/geimist/Update_Blocklist/issues" target="_blank" rel="noopener noreferrer" data-i18n="lang_buttonissues">Support</a>
+      </div>
+    </section>
+  </main>
+  <script src="app.js?v=1.0.28"></script>
+</body>
+</html>

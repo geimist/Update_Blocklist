@@ -1,0 +1,8 @@
+#!/bin/sh
+PKG_VAR="/var/packages/${SYNOPKG_PKGNAME}/var"
+PID="$PKG_VAR/scheduler.pid"
+if [ -f "$PID" ]; then
+    kill "$(cat "$PID")" 2>/dev/null || true
+    rm -f "$PID"
+fi
+exit 0

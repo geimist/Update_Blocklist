@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="Importa automaticamente elenchi di blocco IP nell'elenco di blocco IP di DSM."
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="L'elenco di blocco non è stato caricato {0} volte di seguito."
+msg_import_recovered="L'elenco di blocco è di nuovo disponibile."
+help_import_failed="Inviata quando l'elenco di blocco non è stato scaricato più volte di seguito. Controllare l'URL dell'elenco, l'accesso alla rete e il registro del pacchetto."
+help_import_recovered="Inviata quando l'elenco di blocco può essere scaricato di nuovo dopo un errore."

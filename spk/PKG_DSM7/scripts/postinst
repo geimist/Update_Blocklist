@@ -1,0 +1,10 @@
+#!/bin/sh
+VAR="${SYNOPKG_PKGVAR:-/var/packages/${SYNOPKG_PKGNAME}/var}"
+DEST="${SYNOPKG_PKGDEST:-/var/packages/${SYNOPKG_PKGNAME}/target}"
+mkdir -p "$VAR/log" "$VAR/db_backups" "$VAR/tmp" "$VAR/perf"
+chmod 755 "$DEST/ui/index.cgi" "$DEST"/bin/ui-bin/ab-api-* "$DEST"/bin/helper/ab-helper-* 2>/dev/null || true
+if [ -f "$DEST/share/schema.sql" ]; then
+    sqlite3 "$VAR/app.db" < "$DEST/share/schema.sql"
+    chmod 600 "$VAR/app.db" 2>/dev/null || true
+fi
+exit 0

@@ -1,0 +1,53 @@
+#!/bin/sh
+# Hyper Backup: stellt app.db und die System-DB-Sicherungen wieder her.
+# Das Protokoll unter var/log bleibt unangetastet.
+. /usr/syno/bin/jsoncmd
+
+PKGVAR="/var/packages/${SYNOPKG_PKGNAME}/var"
+IMPPATH=$(jget "${SYNOPKG_BKP_INPUT}" ".temp_path")
+if [ $? -ne 0 ] || [ -z "${IMPPATH}" ]; then
+    jerr "Failed to get import path"
+    exit 1
+fi
+
+mkdir -p "${PKGVAR}/db_backups"
+
+if [ -f "${IMPPATH}/app.db" ]; then
+    rm -f "${PKGVAR}/app.db.restore"
+    if ! sqlite3 "${IMPPATH}/app.db" ".backup '${PKGVAR}/app.db.restore'"; then
+        cp -f "${IMPPATH}/app.db" "${PKGVAR}/app.db.restore" || {
+            jerr "Failed to import app.db"
+            exit 1
+        }
+    fi
+    mv -f "${PKGVAR}/app.db.restore" "${PKGVAR}/app.db"
+    rm -f "${PKGVAR}/app.db-wal" "${PKGVAR}/app.db-shm"
+    chown AutoBan: "${PKGVAR}/app.db" 2>/dev/null || true
+    chmod 600 "${PKGVAR}/app.db" 2>/dev/null || true
+fi
+
+if [ -d "${IMPPATH}/db_backups" ]; then
+    find "${PKGVAR}/db_backups" -maxdepth 1 -type f -exec rm -f {} \;
+    find "${IMPPATH}/db_backups" -maxdepth 1 -type f -exec cp -p {} "${PKGVAR}/db_backups/" \;
+    if [ -f "${PKGVAR}/db_backups/slots.mtime" ]; then
+        while read -r name ts; do
+            case "${name}" in
+                pristine|latest|hour|day|week|month) ;;
+                *) continue ;;
+            esac
+            case "${ts}" in
+                ''|*[!0-9]*) continue ;;
+            esac
+            [ "${ts}" -gt 0 ] || continue
+            dest="${PKGVAR}/db_backups/${name}.db"
+            [ -f "${dest}" ] || continue
+            touch -d "@${ts}" "${dest}" 2>/dev/null || true
+        done < "${PKGVAR}/db_backups/slots.mtime"
+    fi
+    chown AutoBan: "${PKGVAR}/db_backups" "${PKGVAR}/db_backups/"* 2>/dev/null || true
+fi
+
+jout_begin
+joutstr "app_data_version" "1.0"
+jout_end
+exit 0

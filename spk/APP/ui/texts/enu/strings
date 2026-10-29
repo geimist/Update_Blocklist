@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="Automatically imports IP block lists into the DSM IP block list."
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="The block list could not be loaded {0} times in a row."
+msg_import_recovered="The block list could be loaded again."
+help_import_failed="Sent when the block list could not be downloaded several times in a row. Check the list URL, network access, and the package log."
+help_import_recovered="Sent when the block list can be downloaded again after an earlier failure."

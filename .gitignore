@@ -1,0 +1,11 @@
+.tools/
+.cursor/
+.DS_Store
+*.spk
+spk/APP/bin/helper/ab-helper-*
+spk/APP/bin/ui-bin/ab-api-*
+spk/APP/bin/update_blocklist.sh
+spk/APP/share/schema.sql
+spk/APP/ui/images/*.png
+spk/PKG_DSM7/PACKAGE_ICON.PNG
+spk/PKG_DSM7/PACKAGE_ICON_256.PNG

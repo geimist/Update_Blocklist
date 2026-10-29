@@ -1,0 +1,9 @@
+[app]
+app_name="AutoBan"
+app_desc="IP 차단 목록을 DSM IP 차단 목록으로 자동으로 가져옵니다."
+import_failed="{0}"
+import_recovered="{0}"
+msg_import_failed="차단 목록을 연속 {0}회 불러오지 못했습니다."
+msg_import_recovered="차단 목록을 다시 불러왔습니다."
+help_import_failed="차단 목록을 여러 번 연속으로 받지 못했을 때 보냅니다. 목록 URL, 네트워크, 패키지 로그를 확인하세요."
+help_import_recovered="실패 뒤에 차단 목록을 다시 받았을 때 보냅니다."
