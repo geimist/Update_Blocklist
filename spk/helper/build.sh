@@ -18,15 +18,19 @@ fi
 build_one() {
     name=$1
     target=$2
+    shift 2
     echo "build helper $name"
     zig cc -target "$target" -O2 -static -s -Wall -Wextra -Werror \
+        "$@" \
         -o "$out_dir/ab-helper-$name" "$src"
     chmod 755 "$out_dir/ab-helper-$name"
 }
 
 build_one x86_64 x86_64-linux-musl
 build_one i686 x86-linux-musl
-build_one armv7 arm-linux-musleabihf
+# Armada XP (DS214+) hat VFPv3-D16 und kein NEON. Das Default-Ziel erzeugt
+# NEON und die Register d16–d31, das endet dort mit "Illegal instruction".
+build_one armv7 arm-linux-musleabihf -mcpu=generic+v7a+vfp3d16-neon-d32
 build_one aarch64 aarch64-linux-musl
 
 if command -v file >/dev/null 2>&1; then
