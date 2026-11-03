@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS run_days (
   count_after INTEGER NOT NULL
 );
 INSERT OR IGNORE INTO settings(key, value) VALUES
-  ('interval_minutes','10'),('blocklist_typ','all'),
+  ('interval_minutes','30'),('blocklist_typ','all'),
   ('source_url','https://lists.blocklist.de/lists/all.txt'),('extra_sources','[]'),
   ('delete_ip_after','7'),('loglevel','1'),('geoip_mode','off'),
   ('geoip_countries','["DE","CN"]'),('max_attempts','5'),
@@ -255,7 +255,7 @@ load_package_config() {
 
 helper_call() {
     if [ ! -x "$HELPER" ]; then
-        log ERROR "ab-helper nicht gefunden oder nicht ausführbar (${HELPER})"
+        log ERROR "ab-helper not found or not executable (${HELPER})"
         exit 1
     fi
     "$HELPER" --db "$SYS_DB" --backup-dir "$BACKUP_DIR" --tmp-dir "${PKG_VAR}/tmp" "$@"
@@ -600,7 +600,7 @@ download_primary() {
             return 0
         fi
         attempts=$((attempts + 1))
-        log WARN "Quelle nicht geladen (Versuch ${attempts}/${MAX_ATTEMPTS}): ${url}"
+        log WARN "source not loaded (attempt ${attempts}/${MAX_ATTEMPTS}): ${url}"
         [ "$attempts" -lt "$MAX_ATTEMPTS" ] && sleep 5
     done
     return 1
@@ -614,9 +614,9 @@ download_extra() {
         [ -n "$url" ] || continue
         if fetch_to "$url" "$dest" && [ -s "$dest" ]; then
             cat "$dest"
-            log INFO "Zusatzquelle geladen: ${url}"
+            log INFO "extra source loaded: ${url}"
         else
-            log WARN "Zusatzquelle übersprungen: ${url}"
+            log WARN "extra source skipped: ${url}"
         fi
         rm -f "$dest"
     done < <(json_lines "$EXTRA_SOURCES")
@@ -775,13 +775,13 @@ finish_run() {
             persist_var SuccessStreak 0
             status="recovery"
             message="recovered"
-            log INFO "Die Blockliste ist wieder erreichbar."
+            log INFO "The block list is reachable again."
             record_run "$status" "$message"
             notify_dsm recovery
             exit 2
         fi
         message="recovering ${SuccessStreak}/${RECOVERY_ALERT_AFTER}"
-        log INFO "Lauf normal (${SuccessStreak}/${RECOVERY_ALERT_AFTER}), Meldung noch nicht gesendet."
+        log INFO "run ok (${SuccessStreak}/${RECOVERY_ALERT_AFTER}), recovery not reported yet."
     fi
     record_run "$status" "$message"
     exit 0
@@ -794,13 +794,13 @@ acquire_lock() {
     if command -v flock >/dev/null 2>&1; then
         exec 9>"$lock"
         if ! flock -n 9; then
-            log INFO "Ein Lauf ist bereits aktiv."
+            log INFO "A run is already in progress."
             exit 0
         fi
     else
         LOCK_DIR="${lock}.d"
         if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-            log INFO "Ein Lauf ist bereits aktiv."
+            log INFO "A run is already in progress."
             exit 0
         fi
     fi
@@ -865,7 +865,7 @@ case "$BLOCKLIST_TYP" in
 esac
 
 acquire_lock
-log INFO "Lauf gestartet (Typ ${BLOCKLIST_TYP}, Ablauf ${DELETE_IP_AFTER} Tage, GeoIP ${useGeoIP}, IPv6 ${IMPORT_IPV6})"
+log INFO "run started (type ${BLOCKLIST_TYP}, expire after ${DELETE_IP_AFTER} days, GeoIP ${useGeoIP}, IPv6 ${IMPORT_IPV6})"
 
 if [ "$PACKAGE_MODE" = 1 ]; then
     mkdir -p "${PKG_VAR}/tmp"
@@ -881,9 +881,9 @@ insert_list="${work_tmp}/insert.txt"
 : > "$insert_list"
 
 if [ -f "$SYS_DB" ]; then
-    db_backup || { record_run fail "backup failed"; log ERROR "Backup der Systemdatenbank fehlgeschlagen"; function_exit 1; }
-fi
-db_ensure || { record_run fail "schema failed"; log ERROR "Systemdatenbank nicht vorbereitet"; function_exit 1; }
+    db_backup || { record_run fail "backup failed"; log ERROR "system database backup failed"; function_exit 1; }
+    fi
+db_ensure || { record_run fail "schema failed"; log ERROR "system database not prepared"; function_exit 1; }
 if [ "$PACKAGE_MODE" = 1 ] && [ ! -f "${BACKUP_DIR}/pristine.db" ]; then
     db_backup || true
 fi
@@ -898,7 +898,7 @@ db_export "$before_list"
 
 if ! download_primary > "${work_tmp}/primary_raw.txt"; then
     record_run fail "download failed"
-    log ERROR "Blockliste konnte nicht geladen werden."
+    log ERROR "Block list could not be loaded."
     function_exit 1
 fi
 sort -u "${work_tmp}/primary_raw.txt" > "${work_tmp}/primary_sorted.txt"
@@ -907,11 +907,11 @@ online_count=$(wc -l < "$online_list" | tr -d ' ')
 
 diff "$before_list" "$online_list" | grep '^>' | sed -e 's/^> //' > "$blocklist_list" || true
 countofdiffs=$(wc -l < "$blocklist_list" | tr -d ' ')
-log INFO "Online ${online_count}, neu ${countofdiffs}, abgelaufen ${CountExpiredIP}"
+log INFO "online ${online_count}, new ${countofdiffs}, expired ${CountExpiredIP}"
 
 if [ "$useGeoIP" = "blockonly" ] || [ "$useGeoIP" = "blockother" ]; then
     if [ ! -f "$GeoIP_DB" ] || ! command -v python3 >/dev/null 2>&1; then
-        log WARN "GeoIP nicht verfügbar, Filter aus"
+        log WARN "GeoIP unavailable, filter off"
         useGeoIP="off"
     else
         geoip_helper="${work_tmp}/geoip_lookup.py"
@@ -924,7 +924,7 @@ if [ "$useGeoIP" = "blockonly" ] || [ "$useGeoIP" = "blockother" ]; then
             source "${python3_env}/bin/activate"
         fi
         if ! python3 "$geoip_helper" "$GeoIP_DB" < "$blocklist_list" > "$geoip_results"; then
-            log WARN "GeoIP-Lauf fehlgeschlagen, Filter aus"
+            log WARN "GeoIP run failed, filter off"
             useGeoIP="off"
         else
             declare -A geoip_map
@@ -940,7 +940,7 @@ progress_end="${countofdiffs:-0}"
 while IFS= read -r BLOCKED_IP; do
     [ -n "$BLOCKED_IP" ] || continue
     if ! accept_ip "$BLOCKED_IP"; then
-        log DEBUG "überspringe ungültige IP ${BLOCKED_IP}"
+        log DEBUG "skipping invalid IP ${BLOCKED_IP}"
         continue
     fi
     if [ "$useGeoIP" = "blockonly" ] || [ "$useGeoIP" = "blockother" ]; then
@@ -967,7 +967,7 @@ while IFS= read -r BLOCKED_IP; do
 done < "$blocklist_list"
 
 if [ "$countadded" -ge 1 ]; then
-    log INFO "schreibe ${countadded} IPs"
+    log INFO "writing ${countadded} IPs"
     db_insert_file "$insert_list" "$UNIXTIME" "$UNIXTIME_DELETE_IP" >/dev/null
 fi
 countafter=$(db_count | tr -d '[:space:]')
@@ -984,7 +984,7 @@ if [ "$PACKAGE_MODE" != 1 ] && { [ "$LOGLEVEL" -eq 1 ] || [ "$LOGLEVEL" -eq 2 ];
     printf 'blocked IPs:                  before: %s / current: %s\n' "$countbefore" "$countafter"
 fi
 
-log INFO "fertig: hinzugefügt ${countadded}, GeoIP übersprungen ${skipByGeoIP}, Bestand ${countbefore} -> ${countafter}"
+log INFO "done: added ${countadded}, GeoIP skipped ${skipByGeoIP}, stock ${countbefore} -> ${countafter}"
 if [ "$DEBUG_PERF" = 1 ]; then
     mkdir -p "${PKG_VAR:-$work_tmp}/perf"
     perf_file="${PKG_VAR:-$work_tmp}/perf/last.ndjson"

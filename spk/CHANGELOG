@@ -1,3 +1,7 @@
+1.0.1 [2026-xx-xx]
+    ● change log to english
+    ● GUI improvements
+
 1.0.0 [2026-10-29]
-    inital release of this package.
-    a SPK port of update_blocklist.sh under support of CURSOR
+    ● inital release of this package.
+    ● a SPK port of update_blocklist.sh under support of CURSOR

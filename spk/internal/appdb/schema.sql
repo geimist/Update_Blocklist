@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS run_days (
 );
 
 INSERT OR IGNORE INTO settings(key, value) VALUES
-  ('interval_minutes', '10'),
+  ('interval_minutes', '30'),
   ('blocklist_typ', 'all'),
   ('source_url', 'https://lists.blocklist.de/lists/all.txt'),
   ('extra_sources', '[]'),

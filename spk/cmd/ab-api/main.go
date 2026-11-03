@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -206,6 +207,30 @@ func loginSuccess(text string) bool {
 	return strings.Contains(compact, `"success":true`)
 }
 
+// Wie synOCR: ?v=<mtime> ändert sich, sobald CSS/JS auf der Disk neu sind.
+var assetQueryRe = regexp.MustCompile(`((?:href|src)=")(app\.(?:css|js))(?:\?[^"]*)?(")`)
+
+func uiAssetVer(ui string) string {
+	var max int64
+	for _, name := range []string{"app.css", "app.js"} {
+		st, err := os.Stat(filepath.Join(ui, name))
+		if err != nil {
+			continue
+		}
+		if t := st.ModTime().Unix(); t > max {
+			max = t
+		}
+	}
+	if max == 0 {
+		max = time.Now().Unix()
+	}
+	return strconv.FormatInt(max, 10)
+}
+
+func injectUIAssetVer(html, ver string) string {
+	return assetQueryRe.ReplaceAllString(html, `${1}${2}?v=`+ver+`${3}`)
+}
+
 func (s *server) static(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(r.URL.Path, "/")
 	// DSM ruft /webman/3rdparty/AutoBan/index.cgi auf. Der iframe bekommt damit die Oberfläche.
@@ -216,8 +241,24 @@ func (s *server) static(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	path := filepath.Join(s.ui, name)
 	w.Header().Set("Cache-Control", "no-cache")
-	http.ServeFile(w, r, filepath.Join(s.ui, name))
+	if name == "index.html" {
+		s.serveIndex(w, path)
+		return
+	}
+	http.ServeFile(w, r, path)
+}
+
+func (s *server) serveIndex(w http.ResponseWriter, path string) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	html := injectUIAssetVer(string(b), uiAssetVer(s.ui))
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (s *server) db() (*sql.DB, error) {
@@ -642,7 +683,7 @@ func (s *server) noteCleared(removed int64) {
 		return
 	}
 	defer f.Close()
-	line := time.Now().Format("2006-01-02 15:04:05") + " INFO Blockliste geleert (" + strconv.FormatInt(removed, 10) + ")\n"
+	line := time.Now().Format("2006-01-02 15:04:05") + " INFO block list cleared (" + strconv.FormatInt(removed, 10) + ")\n"
 	_, _ = f.WriteString(line)
 }
 

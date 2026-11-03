@@ -22,7 +22,7 @@ var notifyLangs = map[string]bool{
 }
 
 var intervalSteps = map[string]bool{
-	"1": true, "5": true, "10": true, "15": true, "20": true, "30": true, "60": true, "120": true,
+	"5": true, "10": true, "30": true, "60": true, "120": true, "720": true, "1440": true,
 }
 
 var settingKeys = []string{
@@ -53,7 +53,7 @@ func checkSetting(key, v string) (string, error) {
 	case "interval_minutes":
 		v = strings.TrimSpace(v)
 		if !intervalSteps[v] {
-			return "", fmt.Errorf("interval must be one of 1, 5, 10, 15, 20, 30, 60, 120")
+			return "", fmt.Errorf("interval must be one of 5, 10, 30, 60, 120, 720, 1440")
 		}
 		return v, nil
 	case "blocklist_typ":

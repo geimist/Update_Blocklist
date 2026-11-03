@@ -46,8 +46,8 @@ trim_scheduler_log() {
 while true; do
     trim_scheduler_log
     enabled=$(setting scheduler_enabled 2>/dev/null || echo 0)
-    interval=$(setting interval_minutes 2>/dev/null || echo 10)
-    [[ "$interval" =~ ^[0-9]+$ ]] || interval=10
+    interval=$(setting interval_minutes 2>/dev/null || echo 30)
+    [[ "$interval" =~ ^[0-9]+$ ]] || interval=30
     [ "$interval" -lt 1 ] && interval=1
     if [ "$enabled" = "1" ] && [ -x "$SCRIPT" ]; then
         "$SCRIPT" || true

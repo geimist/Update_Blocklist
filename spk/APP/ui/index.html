@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AutoBan</title>
-  <link rel="stylesheet" href="app.css?v=1.0.28">
+  <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <header>
@@ -37,10 +37,10 @@
             <span class="field-label">
               <span data-i18n="lang_interval">Intervall</span>
               <button type="button" class="info" data-help="lang_help_interval">i</button>
-              <strong id="interval-label">10 Minuten</strong>
+              <strong id="interval-label">30 Minuten</strong>
             </span>
-            <input id="interval-range" type="range" min="0" max="7" step="1" value="2">
-            <input type="hidden" name="interval_minutes" value="10">
+            <input id="interval-range" type="range" min="0" max="6" step="1" value="2">
+            <input type="hidden" name="interval_minutes" value="30">
           </label>
           <label class="delete-after">
             <span class="field-label"><span data-i18n="lang_delete_after">IP nach Tagen entfernen (0 = dauerhaft)</span><button type="button" class="info" data-help="lang_help_delete_after">i</button></span>
@@ -72,9 +72,6 @@
               <div class="textarea-shell">
                 <textarea name="extra_sources" rows="3" class="resize-y"></textarea>
               </div>
-            </label>
-            <label><span class="field-label"><span data-i18n="lang_loglevel">Logstufe</span><button type="button" class="info" data-help="lang_help_loglevel">i</button></span>
-              <select name="loglevel"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select>
             </label>
             <label><span class="field-label"><span data-i18n="lang_geoip_mode">GeoIP</span><button type="button" class="info" data-help="lang_help_geoip_mode">i</button></span>
               <select name="geoip_mode"><option value="off">off</option><option value="blockonly">blockonly</option><option value="blockother">blockother</option></select>
@@ -111,10 +108,13 @@
             <label><span class="field-label"><span data-i18n="lang_deny">Liste</span><button type="button" class="info" data-help="lang_help_deny">i</button></span>
               <select name="deny"><option value="1">1</option><option value="0">0</option></select>
             </label>
+            <label><span class="field-label"><span data-i18n="lang_loglevel">Logstufe</span><button type="button" class="info" data-help="lang_help_loglevel">i</button></span>
+              <select name="loglevel"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select>
+            </label>
             <label hidden><span class="field-label"><span data-i18n="lang_type">Adresstyp</span><button type="button" class="info" data-help="lang_help_type">i</button></span><input name="type" type="number" min="0" max="3"></label>
             <label hidden><span class="field-label"><span data-i18n="lang_meta">Meta (Bereich oder Maske)</span><button type="button" class="info" data-help="lang_help_meta">i</button></span><input name="meta"></label>
             <label class="check" hidden><input name="progressbar" type="checkbox"><span data-i18n="lang_progress">Fortschrittsbalken im Standalone-Lauf</span><button type="button" class="info" data-help="lang_help_progress">i</button></label>
-            <label class="check"><input name="debug_perf" type="checkbox"><span data-i18n="lang_debug">Performance-Protokoll</span><button type="button" class="info" data-help="lang_help_debug">i</button></label>
+            <label class="check wide"><input name="debug_perf" type="checkbox"><span data-i18n="lang_debug">Performance-Protokoll</span><button type="button" class="info" data-help="lang_help_debug">i</button></label>
           </div>
         </details>
         <div class="actions">
@@ -178,6 +178,6 @@
       </div>
     </section>
   </main>
-  <script src="app.js?v=1.0.28"></script>
+  <script src="app.js"></script>
 </body>
 </html>

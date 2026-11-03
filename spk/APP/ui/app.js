@@ -114,7 +114,7 @@ function jsonToLines(raw) {
   }
 }
 
-const INTERVALS = [1, 5, 10, 15, 20, 30, 60, 120];
+const INTERVALS = [5, 10, 30, 60, 120, 720, 1440];
 
 function blocklistURL(typ) {
   return `https://lists.blocklist.de/lists/${typ || "all"}.txt`;
@@ -304,7 +304,11 @@ function svgEl(name, attrs) {
   return el;
 }
 
+let chartPoints = [];
+let chartWidth = 0;
+
 function drawChart(points) {
+  chartPoints = points || [];
   const host = document.getElementById("chart");
   host.replaceChildren();
   if (!points || !points.length) {
@@ -314,7 +318,8 @@ function drawChart(points) {
     host.append(p);
     return;
   }
-  const w = 640;
+  const w = Math.max(Math.round(host.clientWidth) || 640, 320);
+  chartWidth = w;
   const h = 240;
   const left = 52;
   const right = 12;
@@ -545,18 +550,30 @@ document.getElementById("run").addEventListener("click", async () => {
   }
 });
 
+function setLogVisible(visible) {
+  const log = document.getElementById("log");
+  const btn = document.getElementById("showlog");
+  log.hidden = !visible;
+  btn.dataset.i18n = visible ? "lang_buttonloghide" : "lang_buttonlog";
+  btn.textContent = t(btn.dataset.i18n);
+}
+
 document.getElementById("showlog").addEventListener("click", async () => {
   const log = document.getElementById("log");
+  if (!log.hidden) {
+    setLogVisible(false);
+    return;
+  }
   const data = await api("log");
-  log.hidden = false;
   log.textContent = data.text || t("lang_log_empty");
+  setLogVisible(true);
 });
 
 document.getElementById("clearlog").addEventListener("click", async () => {
   await api("log", { method: "POST" });
   const log = document.getElementById("log");
-  log.hidden = false;
   log.textContent = t("lang_log_empty");
+  setLogVisible(true);
 });
 
 document.getElementById("restore").addEventListener("click", async () => {
@@ -603,6 +620,15 @@ document.getElementById("chart-span").addEventListener("input", () => {
   setChartLabel(chartSpan());
   loadChart();
 });
+
+{
+  const host = document.getElementById("chart");
+  new ResizeObserver(() => {
+    const w = Math.round(host.clientWidth);
+    if (!chartPoints.length || w === chartWidth) return;
+    drawChart(chartPoints);
+  }).observe(host);
+}
 
 document.getElementById("interval-range").addEventListener("input", (ev) => {
   setIntervalMinutes(INTERVALS[Number(ev.target.value)]);
