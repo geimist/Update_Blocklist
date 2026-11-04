@@ -1,9 +1,8 @@
 1.0.1 [2026-11-03]
-    ● change log to english
+    ● change logging language to english
     ● GUI improvements
     ● Bugfix for ARMv7 (DS214+)
 
 1.0.0 [2026-10-29]
     ● inital release of this package.
     ● a SPK port of update_blocklist.sh under support of CURSOR
-    

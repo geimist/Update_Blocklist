@@ -50,6 +50,7 @@
   "lang_type": "Adres türü",
   "lang_meta": "Meta (aralık veya maske)",
   "lang_debug": "Performans günlüğü",
+  "lang_telemetry": "Anonim kullanım istatistiği gönder",
   "lang_stats_time": "Zaman",
   "lang_stats_status": "Durum",
   "lang_stats_duration": "Süre",
@@ -102,6 +103,7 @@
   "lang_help_meta": "Yalnız aralık veya ağ maskesinde, örneğin maske.",
   "lang_help_progress": "İlerleme yalnız betik doğrudan root olarak çalıştırıldığında.",
   "lang_help_debug": "Çalışma süresiyle bir satırı var/perf/last.ndjson dosyasına yazar.",
+  "lang_help_telemetry": "AutoBan’ın geliştiriciye gönderdiği küçük, anonim bir bildirimle paketin hangi cihazlarda ve DSM sürümlerinde çalıştığına dair istatistik tutulur. Bu, geliştirmeye yardımcı olur.\n\nYalnızca bu kayıt gönderilir:\nModel (ör. DS920+)\nDSM sürümü (ör. 7.2.2)\nDSM derlemesi (ör. 72806)\nAutoBan sürümü (ör. 1.0.1)\nMimari (ör. x86_64)\nUID (rastgele değer)\n\nUID sizi veya cihazınızı tanımlamak için kullanılmaz. Yalnızca bir kurulumun verilerinin bir kez sayılmasını sağlar.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Hata",
   "lang_status_recovery": "düzeldi"

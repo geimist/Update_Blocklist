@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
+	"os"
 
 	_ "modernc.org/sqlite"
 )
@@ -37,6 +38,8 @@ type Run struct {
 }
 
 func Open(path string) (*sql.DB, error) {
+	_, statErr := os.Stat(path)
+	existed := statErr == nil
 	db, err := sql.Open("sqlite", "file:"+path+"?_pragma=busy_timeout(5000)")
 	if err != nil {
 		return nil, err
@@ -46,7 +49,27 @@ func Open(path string) (*sql.DB, error) {
 		db.Close()
 		return nil, err
 	}
+	if err := ensureTelemetryEnabled(db, existed); err != nil {
+		db.Close()
+		return nil, err
+	}
 	return db, nil
+}
+
+func ensureTelemetryEnabled(db *sql.DB, existed bool) error {
+	var n int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM settings WHERE key='telemetry_enabled'`).Scan(&n); err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	val := "1"
+	if existed {
+		val = "0"
+	}
+	_, err := db.Exec(`INSERT INTO settings(key, value) VALUES('telemetry_enabled', ?)`, val)
+	return err
 }
 
 func Settings(db *sql.DB) (map[string]string, error) {

@@ -50,6 +50,7 @@
   "lang_type": "주소 유형",
   "lang_meta": "Meta(범위 또는 마스크)",
   "lang_debug": "성능 로그",
+  "lang_telemetry": "익명 사용 통계 보내기",
   "lang_stats_time": "시간",
   "lang_stats_status": "상태",
   "lang_stats_duration": "소요 시간",
@@ -102,6 +103,7 @@
   "lang_help_meta": "범위 또는 넷마스크일 때만, 예를 들어 마스크.",
   "lang_help_progress": "스크립트를 root로 직접 실행할 때만 진행을 표시합니다.",
   "lang_help_debug": "실행 시간 한 줄을 var/perf/last.ndjson에 씁니다.",
+  "lang_help_telemetry": "AutoBan이 개발자에게 보내는 짧은 익명 보고로, 패키지가 어떤 기기와 DSM 버전에서 실행되는지 통계가 집계됩니다. 이는 개발에 도움이 됩니다.\n\n다음 기록만 전송됩니다:\n모델(예: DS920+)\nDSM 버전(예: 7.2.2)\nDSM 빌드(예: 72806)\nAutoBan 버전(예: 1.0.1)\n아키텍처(예: x86_64)\nUID(난수)\n\nUID는 사용자나 기기를 식별하는 데 쓰이지 않습니다. 한 설치의 데이터가 한 번만 집계되도록 할 뿐입니다.",
   "lang_status_ok": "정상",
   "lang_status_fail": "오류",
   "lang_status_recovery": "복구됨"

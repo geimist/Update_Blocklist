@@ -140,6 +140,8 @@ trim_log() {
 
 init_app_db() {
     mkdir -p "${PKG_VAR}/log" "${PKG_VAR}/db_backups" "${PKG_VAR}/tmp" "${PKG_VAR}/perf"
+    local existed=0
+    [ -f "$APP_DB" ] && existed=1
     # Gleiches Schema wie spk/internal/appdb/schema.sql
     sqlite3 "$APP_DB" <<'SQL'
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -177,6 +179,11 @@ INSERT OR IGNORE INTO settings(key, value) VALUES
 INSERT OR IGNORE INTO state(key, value) VALUES
   ('fail_streak','0'),('success_streak','0'),('alert_state','0');
 SQL
+    if [ "$existed" = 1 ]; then
+        sqlite3 "$APP_DB" "INSERT OR IGNORE INTO settings(key, value) VALUES('telemetry_enabled','0');"
+    else
+        sqlite3 "$APP_DB" "INSERT OR IGNORE INTO settings(key, value) VALUES('telemetry_enabled','1');"
+    fi
     chmod 600 "$APP_DB" 2>/dev/null || true
 }
 
@@ -198,6 +205,126 @@ state_set() {
     local key="$1" value="$2"
     [[ "$value" =~ ^[0-9]+$ ]] || return 1
     sqlite3 "$APP_DB" "INSERT INTO state(key,value) VALUES('${key}','${value}') ON CONFLICT(key) DO UPDATE SET value='${value}';"
+}
+
+state_get_text() {
+    sqlite3 "$APP_DB" "SELECT value FROM state WHERE key='$1';"
+}
+
+state_set_text() {
+    local key="$1" value="$2"
+    value=${value//\'/\'\'}
+    sqlite3 "$APP_DB" "INSERT INTO state(key,value) VALUES('${key}','${value}') ON CONFLICT(key) DO UPDATE SET value='${value}';"
+}
+
+telemetry_new_uuid() {
+    local u=""
+    if [ -r /proc/sys/kernel/random/uuid ]; then
+        u=$(tr -d '[:space:]' < /proc/sys/kernel/random/uuid)
+    elif command -v uuidgen >/dev/null 2>&1; then
+        u=$(uuidgen | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
+    fi
+    [[ "$u" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]] || return 1
+    printf '%s' "$u"
+}
+
+telemetry_endpoint() {
+    local file="${PKG_TARGET}/share/telemetry.json"
+    local url=""
+    [ -r "$file" ] || return 1
+    if command -v python3 >/dev/null 2>&1; then
+        url=$(python3 -c 'import json,sys
+try:
+    print(json.load(open(sys.argv[1], encoding="utf-8")).get("endpoint","").strip())
+except Exception:
+    print("")' "$file" 2>/dev/null) || url=""
+    else
+        url=$(sed -n 's/.*"endpoint"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$file" | head -n1)
+    fi
+    [[ "$url" == https://* ]] || return 1
+    printf '%s' "$url"
+}
+
+telemetry_kv() {
+    local file="$1" key="$2"
+    sed -n "s/^${key}=\"\\(.*\\)\"/\\1/p" "$file" | head -n1
+}
+
+telemetry_maybe_send() {
+    [ "$PACKAGE_MODE" = 1 ] || return 0
+    local enabled month last uid endpoint body dest
+    enabled=$(setting_get telemetry_enabled)
+    [ "$enabled" = "1" ] || return 0
+    month=$(date +%Y-%m)
+    last=$(state_get_text telemetry_month)
+    [ "$last" = "$month" ] && return 0
+    endpoint=$(telemetry_endpoint) || {
+        log DEBUG "telemetry skipped: no https endpoint"
+        return 0
+    }
+    uid=$(state_get_text telemetry_uuid)
+    if [ -z "$uid" ]; then
+        uid=$(telemetry_new_uuid) || {
+            log DEBUG "telemetry skipped: no uuid"
+            return 0
+        }
+        state_set_text telemetry_uuid "$uid"
+    fi
+    local device dsm dsm_build version arch
+    device=$(tr -d '[:space:]' < /proc/sys/kernel/syno_hw_version 2>/dev/null || true)
+    dsm=$(telemetry_kv /etc.defaults/VERSION productversion)
+    dsm_build=$(telemetry_kv /etc.defaults/VERSION buildnumber)
+    version=$(telemetry_kv /var/packages/AutoBan/INFO version)
+    arch=$(uname -m)
+    [ -n "$device" ] && [ -n "$version" ] && [ -n "$arch" ] || {
+        log DEBUG "telemetry skipped: missing device, version or arch"
+        return 0
+    }
+    dest="${PKG_VAR}/tmp/telemetry.out"
+    mkdir -p "${PKG_VAR}/tmp"
+    if command -v python3 >/dev/null 2>&1; then
+        if ! python3 -c 'import sys,urllib.parse,urllib.request
+url, dest = sys.argv[1], sys.argv[2]
+q = urllib.parse.urlencode({
+    "uuid": sys.argv[3], "device": sys.argv[4], "dsm": sys.argv[5],
+    "dsm_build": sys.argv[6], "version": sys.argv[7], "arch": sys.argv[8],
+})
+req = urllib.request.Request(url + "?" + q)
+try:
+    with urllib.request.urlopen(req, timeout=10) as r:
+        open(dest, "wb").write(r.read())
+except Exception:
+    sys.exit(1)
+' "$endpoint" "$dest" "$uid" "$device" "$dsm" "$dsm_build" "$version" "$arch"; then
+            log DEBUG "telemetry request failed"
+            rm -f "$dest"
+            return 0
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if ! wget -q --timeout=10 --tries=1 -O "$dest" \
+            "${endpoint}?uuid=${uid}&device=${device}&dsm=${dsm}&dsm_build=${dsm_build}&version=${version}&arch=${arch}"; then
+            log DEBUG "telemetry request failed"
+            rm -f "$dest"
+            return 0
+        fi
+    elif command -v curl >/dev/null 2>&1; then
+        if ! curl -fsS --max-time 10 -o "$dest" \
+            "${endpoint}?uuid=${uid}&device=${device}&dsm=${dsm}&dsm_build=${dsm_build}&version=${version}&arch=${arch}"; then
+            log DEBUG "telemetry request failed"
+            rm -f "$dest"
+            return 0
+        fi
+    else
+        return 0
+    fi
+    body=$(cat "$dest" 2>/dev/null || true)
+    rm -f "$dest"
+    if printf '%s' "$body" | grep -q '"status"[[:space:]]*:[[:space:]]*"success"'; then
+        state_set_text telemetry_month "$month"
+        log DEBUG "telemetry sent for ${month}"
+    else
+        log DEBUG "telemetry rejected"
+    fi
 }
 
 json_lines() {
@@ -866,6 +993,7 @@ esac
 
 acquire_lock
 log INFO "run started (type ${BLOCKLIST_TYP}, expire after ${DELETE_IP_AFTER} days, GeoIP ${useGeoIP}, IPv6 ${IMPORT_IPV6})"
+telemetry_maybe_send
 
 if [ "$PACKAGE_MODE" = 1 ]; then
     mkdir -p "${PKG_VAR}/tmp"

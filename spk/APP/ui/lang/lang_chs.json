@@ -50,6 +50,7 @@
   "lang_type": "地址类型",
   "lang_meta": "Meta（范围或掩码）",
   "lang_debug": "性能日志",
+  "lang_telemetry": "发送匿名使用统计",
   "lang_stats_time": "时间",
   "lang_stats_status": "状态",
   "lang_stats_duration": "时长",
@@ -102,6 +103,7 @@
   "lang_help_meta": "仅用于范围或网络掩码，例如掩码本身。",
   "lang_help_progress": "仅在以 root 直接运行脚本时显示进度。",
   "lang_help_debug": "向 var/perf/last.ndjson 写入一行运行时间。",
+  "lang_help_telemetry": "通过 AutoBan 向开发者发送的一条简短匿名报告，可以统计该软件包运行在哪些设备和 DSM 版本上。这有助于开发。\n\n仅发送以下记录：\n型号（例如 DS920+）\nDSM 版本（例如 7.2.2）\nDSM 内部版本（例如 72806）\nAutoBan 版本（例如 1.0.1）\n架构（例如 x86_64）\nUID（随机值）\n\nUID 不用于识别您或您的设备。它只用于确保一次安装的数据只被统计一次。",
   "lang_status_ok": "正常",
   "lang_status_fail": "错误",
   "lang_status_recovery": "已恢复"

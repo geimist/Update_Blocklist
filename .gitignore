@@ -6,6 +6,12 @@ spk/APP/bin/helper/ab-helper-*
 spk/APP/bin/ui-bin/ab-api-*
 spk/APP/bin/update_blocklist.sh
 spk/APP/share/schema.sql
+spk/APP/share/telemetry.json
+Updateserver/stats.db
+Updateserver/stats.db-wal
+Updateserver/stats.db-shm
+Updateserver/debug.log
+Updateserver/lib/GeoLite2-Country.mmdb
 spk/APP/ui/images/*.png
 spk/PKG_DSM7/PACKAGE_ICON.PNG
 spk/PKG_DSM7/PACKAGE_ICON_256.PNG

@@ -50,6 +50,7 @@
   "lang_type": "アドレスの種類",
   "lang_meta": "Meta（範囲またはマスク）",
   "lang_debug": "性能ログ",
+  "lang_telemetry": "匿名の利用統計を送信する",
   "lang_stats_time": "時刻",
   "lang_stats_status": "状態",
   "lang_stats_duration": "所要時間",
@@ -102,6 +103,7 @@
   "lang_help_meta": "範囲またはネットマスクのときだけ。たとえばマスク。",
   "lang_help_progress": "スクリプトを root で直接実行したときだけ進行を表示します。",
   "lang_help_debug": "実行時間を 1 行、var/perf/last.ndjson に書き込みます。",
+  "lang_help_telemetry": "AutoBan が開発者に送る小さな匿名レポートにより、どの機器・DSM バージョンでパッケージが動いているかの統計が取られます。これは開発の助けになります。\n\n送信されるのは次の記録だけです：\nモデル（例：DS920+）\nDSM バージョン（例：7.2.2）\nDSM ビルド（例：72806）\nAutoBan バージョン（例：1.0.1）\nアーキテクチャ（例：x86_64）\nUID（乱数）\n\nUID はあなたや機器の識別には使いません。インストールのデータが一度だけ数えられるようにするためだけに使います。",
   "lang_status_ok": "正常",
   "lang_status_fail": "エラー",
   "lang_status_recovery": "復旧"

@@ -36,4 +36,6 @@ Nach der Installation im Paketzentrum besteht folgender Zustand:
 - Sicherungen der Systemdatenbank: `/var/packages/AutoBan/var/db_backups/` (`pristine`, `latest`, `hour`, `day`, `week`, `month`)
 - Nur `ab-helper` schreibt `/etc/synoautoblock.db`.
 
+Bei einer Neuinstallation sendet AutoBan einmal im Monat eine anonyme Nutzungsstatistik (UID, Modell, DSM-Version, DSM-Build, AutoBan-Version, Architektur). Die UID dient nur dazu, eine Installation eindeutig zu zählen. Unter Einstellungen → Erweitert lässt sich das abschalten. Ein Update einer bestehenden Installation schaltet die Statistik nicht ein.
+
 Ein bisher per Aufgabenplaner gestartetes Root-Skript kann entfallen, sobald das Paket läuft. Die Standalone-Nutzung des Skripts bleibt möglich.

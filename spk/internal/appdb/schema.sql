@@ -52,6 +52,8 @@ INSERT OR IGNORE INTO settings(key, value) VALUES
   ('geoip_db', '/var/db/geoip-database/GeoLite2-City.mmdb'),
   ('import_ipv6', '0');
 
+-- telemetry_enabled wird nicht hier gesetzt: Neuinstallation = 1, Update = 0.
+
 INSERT OR IGNORE INTO state(key, value) VALUES
   ('fail_streak', '0'),
   ('success_streak', '0'),

@@ -30,6 +30,7 @@ var settingKeys = []string{
 	"loglevel", "geoip_mode", "geoip_countries", "max_attempts",
 	"fail_alert_after", "recovery_alert_after", "notify_lang", "scheduler_enabled",
 	"debug_perf", "deny", "progressbar", "type", "meta", "geoip_db", "import_ipv6",
+	"telemetry_enabled",
 }
 
 func validateSettings(in map[string]string) (map[string]string, error) {
@@ -118,7 +119,7 @@ func checkSetting(key, v string) (string, error) {
 			return "", fmt.Errorf("unknown notification language")
 		}
 		return v, nil
-	case "scheduler_enabled", "debug_perf", "progressbar", "import_ipv6":
+	case "scheduler_enabled", "debug_perf", "progressbar", "import_ipv6", "telemetry_enabled":
 		return boundedInt(v, 0, 1)
 	case "deny":
 		return boundedInt(v, 0, 1)

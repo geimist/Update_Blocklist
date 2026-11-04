@@ -17,6 +17,7 @@ mkdir -p "$root/APP/bin" "$root/APP/share"
 # Paketskript liegt unter spk/update_blocklist.sh – nicht das Standalone-Skript im Repo-Root.
 cp "$root/update_blocklist.sh" "$root/APP/bin/update_blocklist.sh"
 cp "$root/internal/appdb/schema.sql" "$root/APP/share/schema.sql"
+cp "$root/telemetry.json" "$root/APP/share/telemetry.json"
 chmod 755 "$root/APP/bin/update_blocklist.sh" "$root/APP/bin/autoban-scheduler.sh" "$root/APP/ui/index.cgi"
 chmod -R 755 "$root/APP/ui/texts"
 chmod 755 "$root/PKG_DSM7/scripts/"* "$root/PKG_DSM7/scripts/backup/"*

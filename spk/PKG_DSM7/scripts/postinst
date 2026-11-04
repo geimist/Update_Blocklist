@@ -4,7 +4,14 @@ DEST="${SYNOPKG_PKGDEST:-/var/packages/${SYNOPKG_PKGNAME}/target}"
 mkdir -p "$VAR/log" "$VAR/db_backups" "$VAR/tmp" "$VAR/perf"
 chmod 755 "$DEST/ui/index.cgi" "$DEST"/bin/ui-bin/ab-api-* "$DEST"/bin/helper/ab-helper-* 2>/dev/null || true
 if [ -f "$DEST/share/schema.sql" ]; then
+    existed=0
+    [ -f "$VAR/app.db" ] && existed=1
     sqlite3 "$VAR/app.db" < "$DEST/share/schema.sql"
+    if [ "$existed" = 1 ]; then
+        sqlite3 "$VAR/app.db" "INSERT OR IGNORE INTO settings(key, value) VALUES('telemetry_enabled','0');"
+    else
+        sqlite3 "$VAR/app.db" "INSERT OR IGNORE INTO settings(key, value) VALUES('telemetry_enabled','1');"
+    fi
     chmod 600 "$VAR/app.db" 2>/dev/null || true
 fi
 exit 0

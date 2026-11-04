@@ -50,6 +50,7 @@
   "lang_type": "Typ adresu",
   "lang_meta": "Meta (zakres lub maska)",
   "lang_debug": "Dziennik wydajności",
+  "lang_telemetry": "Wysyłaj anonimowe statystyki użycia",
   "lang_stats_time": "Czas",
   "lang_stats_status": "Stan",
   "lang_stats_duration": "Czas trwania",
@@ -102,6 +103,7 @@
   "lang_help_meta": "Tylko przy zakresie lub masce sieci, na przykład maska.",
   "lang_help_progress": "Wskaźnik postępu tylko przy bezpośrednim uruchomieniu skryptu jako root.",
   "lang_help_debug": "Zapisuje wiersz z czasem działania do var/perf/last.ndjson.",
+  "lang_help_telemetry": "Za pomocą krótkiego anonimowego zgłoszenia, które AutoBan wysyła do dewelopera, prowadzona jest statystyka, na jakich urządzeniach i wersjach DSM działa pakiet. To pomaga w rozwoju.\n\nWysyłany jest tylko ten zestaw danych:\nModel (np. DS920+)\nWersja DSM (np. 7.2.2)\nKompilacja DSM (np. 72806)\nWersja AutoBan (np. 1.0.1)\nArchitektura (np. x86_64)\nUID (wartość losowa)\n\nUID nie służy do identyfikacji Ciebie ani Twojego urządzenia. Zapewnia wyłącznie, że dane jednej instalacji są liczone tylko raz.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Błąd",
   "lang_status_recovery": "przywrócono"

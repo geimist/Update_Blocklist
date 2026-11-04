@@ -50,6 +50,7 @@
   "lang_type": "位址類型",
   "lang_meta": "Meta（範圍或遮罩）",
   "lang_debug": "效能記錄",
+  "lang_telemetry": "傳送匿名使用統計",
   "lang_stats_time": "時間",
   "lang_stats_status": "狀態",
   "lang_stats_duration": "時長",
@@ -102,6 +103,7 @@
   "lang_help_meta": "僅用於範圍或網路遮罩，例如遮罩本身。",
   "lang_help_progress": "僅在以 root 直接執行指令碼時顯示進度。",
   "lang_help_debug": "向 var/perf/last.ndjson 寫入一行執行時間。",
+  "lang_help_telemetry": "透過 AutoBan 傳送給開發者的一小段匿名報告，可以統計此套件執行於哪些裝置與 DSM 版本。這有助於開發。\n\n僅傳送以下紀錄：\n型號（例如 DS920+）\nDSM 版本（例如 7.2.2）\nDSM 內部版本（例如 72806）\nAutoBan 版本（例如 1.0.1）\n架構（例如 x86_64）\nUID（隨機值）\n\nUID 不用來識別您或您的裝置。它只用來確保一次安裝的資料只被計算一次。",
   "lang_status_ok": "正常",
   "lang_status_fail": "錯誤",
   "lang_status_recovery": "已復原"

@@ -50,6 +50,7 @@
   "lang_type": "Typ adresy",
   "lang_meta": "Meta (rozsah nebo maska)",
   "lang_debug": "Protokol výkonu",
+  "lang_telemetry": "Odesílat anonymní statistiku používání",
   "lang_stats_time": "Čas",
   "lang_stats_status": "Stav",
   "lang_stats_duration": "Doba",
@@ -102,6 +103,7 @@
   "lang_help_meta": "Jen u rozsahu nebo masky sítě, například maska.",
   "lang_help_progress": "Ukazatel průběhu jen při přímém spuštění skriptu jako root.",
   "lang_help_debug": "Zapíše řádek s dobou běhu do var/perf/last.ndjson.",
+  "lang_help_telemetry": "Pomocí krátké anonymní zprávy, kterou AutoBan odesílá vývojáři, se vede statistika, na jakých zařízeních a verzích DSM balíček běží. To pomáhá při vývoji.\n\nOdesílá se jen tento záznam:\nModel (např. DS920+)\nVerze DSM (např. 7.2.2)\nSestavení DSM (např. 72806)\nVerze AutoBan (např. 1.0.1)\nArchitektura (např. x86_64)\nUID (náhodná hodnota)\n\nUID neslouží k identifikaci vás ani vašeho zařízení. Zajišťuje pouze, že data jedné instalace se počítají jen jednou.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Chyba",
   "lang_status_recovery": "obnoveno"

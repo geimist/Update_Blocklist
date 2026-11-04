@@ -50,6 +50,7 @@
   "lang_type": "Adressetype",
   "lang_meta": "Meta (område eller maske)",
   "lang_debug": "Ytelseslogg",
+  "lang_telemetry": "Send anonyme bruksstatistikker",
   "lang_stats_time": "Tid",
   "lang_stats_status": "Status",
   "lang_stats_duration": "Varighet",
@@ -102,6 +103,7 @@
   "lang_help_meta": "Bare ved område eller nettmaske, for eksempel masken.",
   "lang_help_progress": "Fremdrift bare når skriptet kjøres direkte som root.",
   "lang_help_debug": "Skriver en linje med kjøretiden til var/perf/last.ndjson.",
+  "lang_help_telemetry": "Via en liten anonym melding som AutoBan sender til utvikleren, føres det statistikk over hvilke enheter og DSM-versjoner pakken kjører på. Det hjelper utviklingen.\n\nBare denne posten sendes:\nModell (f.eks. DS920+)\nDSM-versjon (f.eks. 7.2.2)\nDSM-build (f.eks. 72806)\nAutoBan-versjon (f.eks. 1.0.1)\nArkitektur (f.eks. x86_64)\nUID (tilfeldig verdi)\n\nUID-en brukes ikke til å identifisere deg eller enheten din. Den sørger bare for at dataene for en installasjon telles én gang.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Feil",
   "lang_status_recovery": "gjenopprettet"

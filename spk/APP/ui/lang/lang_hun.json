@@ -50,6 +50,7 @@
   "lang_type": "Címtípus",
   "lang_meta": "Meta (tartomány vagy maszk)",
   "lang_debug": "Teljesítménynapló",
+  "lang_telemetry": "Névtelen használati statisztika küldése",
   "lang_stats_time": "Idő",
   "lang_stats_status": "Állapot",
   "lang_stats_duration": "Időtartam",
@@ -102,6 +103,7 @@
   "lang_help_meta": "Csak tartománynál vagy hálózati maszknál, például a maszk.",
   "lang_help_progress": "Folyamatjelző csak a szkript közvetlen, rootként indított futtatásakor.",
   "lang_help_debug": "Egy sort ír a futási idővel a var/perf/last.ndjson fájlba.",
+  "lang_help_telemetry": "Egy rövid, névtelen jelentéssel, amelyet az AutoBan a fejlesztőnek küld, statisztika készül arról, mely eszközökön és DSM-verziókon fut a csomag. Ez segíti a fejlesztést.\n\nCsak ez a rekord kerül elküldésre:\nModell (pl. DS920+)\nDSM-verzió (pl. 7.2.2)\nDSM-build (pl. 72806)\nAutoBan-verzió (pl. 1.0.1)\nArchitektúra (pl. x86_64)\nUID (véletlen érték)\n\nAz UID nem a te vagy az eszközöd azonosítására szolgál. Kizárólag azt biztosítja, hogy egy telepítés adatai egyszer szerepeljenek a számlálásban.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Hiba",
   "lang_status_recovery": "helyreállítva"

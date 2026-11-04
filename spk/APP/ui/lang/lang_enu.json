@@ -50,6 +50,7 @@
   "lang_type": "Address type",
   "lang_meta": "Meta (range or mask)",
   "lang_debug": "Performance log",
+  "lang_telemetry": "Send anonymous usage statistics",
   "lang_stats_time": "Time",
   "lang_stats_status": "Status",
   "lang_stats_duration": "Duration",
@@ -102,6 +103,7 @@
   "lang_help_meta": "Only for a range or netmask, for example the mask.",
   "lang_help_progress": "Progress display only when the script is run directly as root.",
   "lang_help_debug": "Writes one line with the runtime to var/perf/last.ndjson.",
+  "lang_help_telemetry": "Through a small anonymous report that AutoBan sends to the developer, statistics are kept on which devices and DSM versions the package runs on. That helps with development.\n\nOnly this record is sent:\nModel (e.g. DS920+)\nDSM version (e.g. 7.2.2)\nDSM build (e.g. 72806)\nAutoBan version (e.g. 1.0.1)\nArchitecture (e.g. x86_64)\nUID (random value)\n\nThe UID is not used to identify you or your device. It only ensures that the data for an installation is counted once.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Error",
   "lang_status_recovery": "recovered"

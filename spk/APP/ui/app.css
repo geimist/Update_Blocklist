@@ -154,7 +154,7 @@ button.info {
   display: none;
   box-sizing: border-box;
   width: max-content;
-  max-width: min(280px, calc(100vw - 16px));
+  max-width: min(420px, calc(100vw - 16px));
   padding: 8px 10px;
   border-radius: 8px;
   background: var(--ink);

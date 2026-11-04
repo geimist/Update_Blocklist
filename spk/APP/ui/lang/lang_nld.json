@@ -50,6 +50,7 @@
   "lang_type": "Adrestype",
   "lang_meta": "Meta (bereik of masker)",
   "lang_debug": "Prestatielogboek",
+  "lang_telemetry": "Anonieme gebruiksstatistieken versturen",
   "lang_stats_time": "Tijd",
   "lang_stats_status": "Status",
   "lang_stats_duration": "Duur",
@@ -102,6 +103,7 @@
   "lang_help_meta": "Alleen bij bereik of netmasker, bijvoorbeeld het masker.",
   "lang_help_progress": "Voortgang alleen bij directe aanroep van het script als root.",
   "lang_help_debug": "Schrijft een regel met de looptijd naar var/perf/last.ndjson.",
+  "lang_help_telemetry": "Via een klein anoniem bericht dat AutoBan naar de ontwikkelaar stuurt, wordt bijgehouden op welke apparaten en DSM-versies het pakket draait. Dat helpt bij de ontwikkeling.\n\nAlleen dit record wordt verstuurd:\nModel (bijv. DS920+)\nDSM-versie (bijv. 7.2.2)\nDSM-build (bijv. 72806)\nAutoBan-versie (bijv. 1.0.1)\nArchitectuur (bijv. x86_64)\nUID (willekeurige waarde)\n\nDe UID dient niet om jou of je apparaat te identificeren. Ze zorgt er alleen voor dat de gegevens van een installatie één keer worden geteld.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Fout",
   "lang_status_recovery": "hersteld"
