@@ -103,8 +103,20 @@
   "lang_help_meta": "Jen u rozsahu nebo masky sítě, například maska.",
   "lang_help_progress": "Ukazatel průběhu jen při přímém spuštění skriptu jako root.",
   "lang_help_debug": "Zapíše řádek s dobou běhu do var/perf/last.ndjson.",
-  "lang_help_telemetry": "Pomocí krátké anonymní zprávy, kterou AutoBan odesílá vývojáři, se vede statistika, na jakých zařízeních a verzích DSM balíček běží. To pomáhá při vývoji.\n\nOdesílá se jen tento záznam:\nModel (např. DS920+)\nVerze DSM (např. 7.2.2)\nSestavení DSM (např. 72806)\nVerze AutoBan (např. 1.0.1)\nArchitektura (např. x86_64)\nUID (náhodná hodnota)\n\nUID neslouží k identifikaci vás ani vašeho zařízení. Zajišťuje pouze, že data jedné instalace se počítají jen jednou.",
+  "lang_help_telemetry": "Pomocí krátké anonymní zprávy, kterou AutoBan odesílá vývojáři, se vede statistika, na jakých zařízeních a verzích DSM balíček běží. To pomáhá při vývoji.\n\nOdesílá se jen tento záznam:\nModel: {device}\nVerze DSM: {dsm}\nSestavení DSM: {dsm_build}\nVerze AutoBan: {version}\nArchitektura: {arch}\nUID: {uuid}\nFunguje: {works}\n\nFunguje se odešle jen po volbě Ano nebo Ne.\n\nUID neslouží k identifikaci vás ani vašeho zařízení. Zajišťuje pouze, že data jedné instalace se počítají jen jednou.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Chyba",
-  "lang_status_recovery": "obnoveno"
+  "lang_status_recovery": "obnoveno",
+  "lang_legacy_task": "Plánovač úloh stále obsahuje aktivní úlohu, která spouští starý skript update_blocklist.sh. Doporučujeme ji zakázat nebo smazat. Otevřete Ovládací panel → Plánovač úloh. Název úlohy je {name}.",
+  "lang_legacy_tasks": "Plánovač úloh stále obsahuje aktivní úlohy, které spouštějí starý skript update_blocklist.sh. Doporučujeme je zakázat nebo smazat. Otevřete Ovládací panel → Plánovač úloh. Názvy úloh jsou {name}.",
+  "lang_works_ask": "Funguje u vás AutoBan?",
+  "lang_works_yes": "Ano",
+  "lang_works_no": "Ne",
+  "lang_works_later": "Později",
+  "lang_works_thanks": "Díky za hlášení. Prima.",
+  "lang_works_sorry": "Škoda. Poznámka na GitHubu pomůže.",
+  "lang_works_label": "Ohlášení",
+  "lang_works_state_yes": "funguje",
+  "lang_works_state_no": "nefunguje",
+  "lang_works_unset": "zatím ne"
 }

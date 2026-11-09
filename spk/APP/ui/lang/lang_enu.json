@@ -103,8 +103,20 @@
   "lang_help_meta": "Only for a range or netmask, for example the mask.",
   "lang_help_progress": "Progress display only when the script is run directly as root.",
   "lang_help_debug": "Writes one line with the runtime to var/perf/last.ndjson.",
-  "lang_help_telemetry": "Through a small anonymous report that AutoBan sends to the developer, statistics are kept on which devices and DSM versions the package runs on. That helps with development.\n\nOnly this record is sent:\nModel (e.g. DS920+)\nDSM version (e.g. 7.2.2)\nDSM build (e.g. 72806)\nAutoBan version (e.g. 1.0.1)\nArchitecture (e.g. x86_64)\nUID (random value)\n\nThe UID is not used to identify you or your device. It only ensures that the data for an installation is counted once.",
+  "lang_help_telemetry": "Through a small anonymous report that AutoBan sends to the developer, statistics are kept on which devices and DSM versions the package runs on. That helps with development.\n\nOnly this record is sent:\nModel: {device}\nDSM version: {dsm}\nDSM build: {dsm_build}\nAutoBan version: {version}\nArchitecture: {arch}\nUID: {uuid}\nWorks: {works}\n\nWorks is included only after you choose Yes or No.\n\nThe UID is not used to identify you or your device. It only ensures that the data for an installation is counted once.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Error",
-  "lang_status_recovery": "recovered"
+  "lang_status_recovery": "recovered",
+  "lang_legacy_task": "Task Scheduler still has an active task that runs the old update_blocklist.sh script. You should disable or delete it. Open Control Panel → Task Scheduler. The task name is {name}.",
+  "lang_legacy_tasks": "Task Scheduler still has active tasks that run the old update_blocklist.sh script. You should disable or delete them. Open Control Panel → Task Scheduler. The task names are {name}.",
+  "lang_works_ask": "Is AutoBan working for you?",
+  "lang_works_yes": "Yes",
+  "lang_works_no": "No",
+  "lang_works_later": "Later",
+  "lang_works_thanks": "Thanks for the report. Great.",
+  "lang_works_sorry": "Sorry it is not working. A note on GitHub helps.",
+  "lang_works_label": "Feedback",
+  "lang_works_state_yes": "working",
+  "lang_works_state_no": "not working",
+  "lang_works_unset": "not yet"
 }

@@ -103,8 +103,20 @@
   "lang_help_meta": "Csak tartománynál vagy hálózati maszknál, például a maszk.",
   "lang_help_progress": "Folyamatjelző csak a szkript közvetlen, rootként indított futtatásakor.",
   "lang_help_debug": "Egy sort ír a futási idővel a var/perf/last.ndjson fájlba.",
-  "lang_help_telemetry": "Egy rövid, névtelen jelentéssel, amelyet az AutoBan a fejlesztőnek küld, statisztika készül arról, mely eszközökön és DSM-verziókon fut a csomag. Ez segíti a fejlesztést.\n\nCsak ez a rekord kerül elküldésre:\nModell (pl. DS920+)\nDSM-verzió (pl. 7.2.2)\nDSM-build (pl. 72806)\nAutoBan-verzió (pl. 1.0.1)\nArchitektúra (pl. x86_64)\nUID (véletlen érték)\n\nAz UID nem a te vagy az eszközöd azonosítására szolgál. Kizárólag azt biztosítja, hogy egy telepítés adatai egyszer szerepeljenek a számlálásban.",
+  "lang_help_telemetry": "Egy rövid, névtelen jelentéssel, amelyet az AutoBan a fejlesztőnek küld, statisztika készül arról, mely eszközökön és DSM-verziókon fut a csomag. Ez segíti a fejlesztést.\n\nCsak ez a rekord kerül elküldésre:\nModell: {device}\nDSM-verzió: {dsm}\nDSM-build: {dsm_build}\nAutoBan-verzió: {version}\nArchitektúra: {arch}\nUID: {uuid}\nMűködik: {works}\n\nA Működik csak Igen vagy Nem után kerül elküldésre.\n\nAz UID nem a te vagy az eszközöd azonosítására szolgál. Kizárólag azt biztosítja, hogy egy telepítés adatai egyszer szerepeljenek a számlálásban.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Hiba",
-  "lang_status_recovery": "helyreállítva"
+  "lang_status_recovery": "helyreállítva",
+  "lang_legacy_task": "A Feladatütemezőben még van egy aktív feladat a régi update_blocklist.sh hívással. Érdemes kikapcsolni vagy törölni. Nyissa meg a Vezérlőpult → Feladatütemező menüt. A feladat neve: {name}.",
+  "lang_legacy_tasks": "A Feladatütemezőben még vannak aktív feladatok a régi update_blocklist.sh hívással. Érdemes kikapcsolni vagy törölni őket. Nyissa meg a Vezérlőpult → Feladatütemező menüt. A feladatok nevei: {name}.",
+  "lang_works_ask": "Működik nálad az AutoBan?",
+  "lang_works_yes": "Igen",
+  "lang_works_no": "Nem",
+  "lang_works_later": "Később",
+  "lang_works_thanks": "Köszönjük a visszajelzést. Remek.",
+  "lang_works_sorry": "Kár. Egy GitHub-bejegyzés segít.",
+  "lang_works_label": "Visszajelzés",
+  "lang_works_state_yes": "működik",
+  "lang_works_state_no": "nem működik",
+  "lang_works_unset": "még nincs"
 }

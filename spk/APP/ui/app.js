@@ -1,5 +1,6 @@
 const I18N = {};
 const apiBase = location.pathname.endsWith(".cgi") ? location.pathname : "";
+let telemetryInfo = null;
 
 function t(key) {
   return I18N[key] || key;
@@ -23,6 +24,7 @@ function applyI18n() {
     el.setAttribute("aria-label", text);
   });
   document.title = t("lang_app_title");
+  fillTelemetryHelp(telemetryInfo);
 }
 
 function fieldTip() {
@@ -97,7 +99,133 @@ async function api(action, opts) {
 }
 
 function notice(text) {
-  document.getElementById("notice").textContent = text;
+  document.getElementById("notice").replaceChildren(document.createTextNode(text));
+}
+
+function clearWorksNotices() {
+  const bannerNotice = document.getElementById("works-banner-notice");
+  const rowNotice = document.getElementById("works-row-notice");
+  if (bannerNotice) bannerNotice.replaceChildren();
+  if (rowNotice) rowNotice.replaceChildren();
+}
+
+function fillWorksNotice(el, text, withIssues) {
+  if (!el) return;
+  if (!withIssues) {
+    el.replaceChildren(document.createTextNode(text));
+    return;
+  }
+  const link = document.createElement("a");
+  link.href = "https://github.com/geimist/Update_Blocklist/issues";
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = t("lang_buttonissues");
+  el.replaceChildren(document.createTextNode(text + " "), link);
+}
+
+function showWorksReaction(kind, fromBanner) {
+  const text = kind === "1" ? t("lang_works_thanks") : t("lang_works_sorry");
+  const withIssues = kind === "0";
+  const banner = document.getElementById("works-banner");
+  const ask = banner && banner.querySelector(".works-ask");
+  const bannerNotice = document.getElementById("works-banner-notice");
+  const rowNotice = document.getElementById("works-row-notice");
+  clearWorksNotices();
+  if (fromBanner && banner) {
+    if (ask) ask.hidden = true;
+    banner.hidden = false;
+    fillWorksNotice(bannerNotice, text, withIssues);
+  } else {
+    fillWorksNotice(rowNotice, text, withIssues);
+  }
+}
+
+function fillTelemetryHelp(info) {
+  const btn = document.querySelector('[data-help="lang_help_telemetry"]');
+  if (!btn) return;
+  const src = info || {};
+  const blank = "—";
+  let works = t("lang_works_unset");
+  if (src.works === "1") works = t("lang_works_yes");
+  else if (src.works === "0") works = t("lang_works_no");
+  const text = t("lang_help_telemetry")
+    .split("{device}").join(src.device || blank)
+    .split("{dsm}").join(src.dsm || blank)
+    .split("{dsm_build}").join(src.dsm_build || blank)
+    .split("{version}").join(src.version || blank)
+    .split("{arch}").join(src.arch || blank)
+    .split("{uuid}").join(src.uuid || blank)
+    .split("{works}").join(works);
+  btn.dataset.tip = text;
+  btn.setAttribute("aria-label", text);
+}
+
+function renderWorks(info, opts) {
+  telemetryInfo = info || null;
+  const keepReaction = !!(opts && opts.keepReaction);
+  const banner = document.getElementById("works-banner");
+  const ask = banner && banner.querySelector(".works-ask");
+  const showAsk = !!(info && info.show_prompt);
+  if (banner) {
+    if (showAsk) {
+      banner.hidden = false;
+      if (ask) ask.hidden = false;
+      if (!keepReaction) clearWorksNotices();
+    } else if (!keepReaction) {
+      banner.hidden = true;
+      if (ask) ask.hidden = false;
+      clearWorksNotices();
+    }
+  }
+  const state = document.getElementById("works-state");
+  if (state) {
+    if (!info || !info.works) state.textContent = t("lang_works_unset");
+    else if (info.works === "1") state.textContent = t("lang_works_state_yes");
+    else state.textContent = t("lang_works_state_no");
+  }
+  const yes = document.getElementById("works-set-yes");
+  const no = document.getElementById("works-set-no");
+  if (yes) yes.classList.toggle("on", !!(info && info.works === "1"));
+  if (no) no.classList.toggle("on", !!(info && info.works === "0"));
+  fillTelemetryHelp(info);
+}
+
+async function postWorks(body, kind) {
+  const banner = document.getElementById("works-banner");
+  const askEl = banner && banner.querySelector(".works-ask");
+  const fromBanner = !!(banner && !banner.hidden && askEl && !askEl.hidden);
+  const buttons = document.querySelectorAll("#works-banner button, .works-row button");
+  buttons.forEach((btn) => { btn.disabled = true; });
+  try {
+    const data = await api("telemetry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const keepReaction = kind === "1" || kind === "0";
+    renderWorks(data, { keepReaction });
+    if (keepReaction) showWorksReaction(kind, fromBanner);
+    else clearWorksNotices();
+  } catch (err) {
+    notice(t("lang_error") + ": " + err.message);
+  } finally {
+    buttons.forEach((btn) => { btn.disabled = false; });
+  }
+}
+
+function showLegacyTask(data) {
+  const el = document.getElementById("legacy-task");
+  if (!el) return;
+  const tasks = data && Array.isArray(data.tasks) ? data.tasks : [];
+  const names = tasks.map((task) => String(task.name || task.id || "").trim()).filter(Boolean);
+  if (!names.length) {
+    el.hidden = true;
+    el.textContent = "";
+    return;
+  }
+  const key = names.length > 1 ? "lang_legacy_tasks" : "lang_legacy_task";
+  el.textContent = t(key).split("{name}").join(names.join(", "));
+  el.hidden = false;
 }
 
 function linesToJson(text) {
@@ -491,15 +619,19 @@ async function refreshStatus() {
 }
 
 async function refresh() {
-  const [settings, stats, backups] = await Promise.all([
+  const [settings, stats, backups, legacy, telemetry] = await Promise.all([
     api("settings"),
     api("stats"),
     api("backups"),
+    api("legacy-task").catch(() => ({ tasks: [] })),
+    api("telemetry").catch(() => null),
   ]);
   fillForm(settings);
   latestRuns = stats.runs || [];
   renderRuns(latestRuns);
   renderBackups(backups.slots);
+  showLegacyTask(legacy);
+  if (telemetry) renderWorks(telemetry);
   await loadChart();
   await refreshStatus();
 }
@@ -601,6 +733,12 @@ document.getElementById("clearblock").addEventListener("click", async () => {
     notice(err.status === 409 ? t("lang_run_busy") : t("lang_error") + ": " + err.message);
   }
 });
+
+document.getElementById("works-yes").addEventListener("click", () => postWorks({ works: "1" }, "1"));
+document.getElementById("works-no").addEventListener("click", () => postWorks({ works: "0" }, "0"));
+document.getElementById("works-later").addEventListener("click", () => postWorks({ defer: true }, ""));
+document.getElementById("works-set-yes").addEventListener("click", () => postWorks({ works: "1" }, "1"));
+document.getElementById("works-set-no").addEventListener("click", () => postWorks({ works: "0" }, "0"));
 
 document.getElementById("reload").addEventListener("click", async () => {
   const btn = document.getElementById("reload");

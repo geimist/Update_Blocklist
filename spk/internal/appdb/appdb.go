@@ -110,6 +110,38 @@ func SetSettings(db *sql.DB, values map[string]string) error {
 	return tx.Commit()
 }
 
+func GetState(db *sql.DB, key string) (string, error) {
+	var v string
+	err := db.QueryRow(`SELECT value FROM state WHERE key=?`, key).Scan(&v)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return v, err
+}
+
+func SetState(db *sql.DB, key, value string) error {
+	_, err := db.Exec(`INSERT INTO state(key, value) VALUES(?, ?)
+		ON CONFLICT(key) DO UPDATE SET value=excluded.value`, key, value)
+	return err
+}
+
+func DeleteState(db *sql.DB, key string) error {
+	_, err := db.Exec(`DELETE FROM state WHERE key=?`, key)
+	return err
+}
+
+func HasSuccessfulRun(db *sql.DB) (bool, error) {
+	var n int
+	err := db.QueryRow(`SELECT 1 FROM runs WHERE status IN ('ok', 'recovery') LIMIT 1`).Scan(&n)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func State(db *sql.DB) (map[string]string, error) {
 	rows, err := db.Query(`SELECT key, value FROM state`)
 	if err != nil {

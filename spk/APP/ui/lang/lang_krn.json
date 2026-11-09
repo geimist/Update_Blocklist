@@ -103,8 +103,20 @@
   "lang_help_meta": "범위 또는 넷마스크일 때만, 예를 들어 마스크.",
   "lang_help_progress": "스크립트를 root로 직접 실행할 때만 진행을 표시합니다.",
   "lang_help_debug": "실행 시간 한 줄을 var/perf/last.ndjson에 씁니다.",
-  "lang_help_telemetry": "AutoBan이 개발자에게 보내는 짧은 익명 보고로, 패키지가 어떤 기기와 DSM 버전에서 실행되는지 통계가 집계됩니다. 이는 개발에 도움이 됩니다.\n\n다음 기록만 전송됩니다:\n모델(예: DS920+)\nDSM 버전(예: 7.2.2)\nDSM 빌드(예: 72806)\nAutoBan 버전(예: 1.0.1)\n아키텍처(예: x86_64)\nUID(난수)\n\nUID는 사용자나 기기를 식별하는 데 쓰이지 않습니다. 한 설치의 데이터가 한 번만 집계되도록 할 뿐입니다.",
+  "lang_help_telemetry": "AutoBan이 개발자에게 보내는 짧은 익명 보고로, 패키지가 어떤 기기와 DSM 버전에서 실행되는지 통계가 집계됩니다. 이는 개발에 도움이 됩니다.\n\n다음 기록만 전송됩니다:\n모델: {device}\nDSM 버전: {dsm}\nDSM 빌드: {dsm_build}\nAutoBan 버전: {version}\n아키텍처: {arch}\nUID: {uuid}\n동작: {works}\n\n「동작」은 예 또는 아니오를 선택한 뒤에만 전송됩니다.\n\nUID는 사용자나 기기를 식별하는 데 쓰이지 않습니다. 한 설치의 데이터가 한 번만 집계되도록 할 뿐입니다.",
   "lang_status_ok": "정상",
   "lang_status_fail": "오류",
-  "lang_status_recovery": "복구됨"
+  "lang_status_recovery": "복구됨",
+  "lang_legacy_task": "작업 스케줄러에 이전 update_blocklist.sh 를 실행하는 활성 작업이 아직 있습니다. 비활성화하거나 삭제하는 것이 좋습니다. 제어판 → 작업 스케줄러를 여십시오. 작업 이름은 {name}입니다.",
+  "lang_legacy_tasks": "작업 스케줄러에 이전 update_blocklist.sh 를 실행하는 활성 작업이 아직 여러 개 있습니다. 비활성화하거나 삭제하는 것이 좋습니다. 제어판 → 작업 스케줄러를 여십시오. 작업 이름은 {name}입니다.",
+  "lang_works_ask": "AutoBan이 잘 동작하나요?",
+  "lang_works_yes": "예",
+  "lang_works_no": "아니오",
+  "lang_works_later": "나중에",
+  "lang_works_thanks": "알려 주셔서 감사합니다. 잘 됩니다.",
+  "lang_works_sorry": "아쉽습니다. GitHub에 남기면 도움이 됩니다.",
+  "lang_works_label": "동작 확인",
+  "lang_works_state_yes": "동작함",
+  "lang_works_state_no": "동작 안 함",
+  "lang_works_unset": "아직 없음"
 }

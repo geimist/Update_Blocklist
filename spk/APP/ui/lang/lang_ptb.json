@@ -103,8 +103,20 @@
   "lang_help_meta": "Somente para intervalo ou máscara de rede, por exemplo a máscara.",
   "lang_help_progress": "Indicador de progresso apenas na execução direta do script como root.",
   "lang_help_debug": "Grava uma linha com a duração em var/perf/last.ndjson.",
-  "lang_help_telemetry": "Por meio de um pequeno relatório anônimo que o AutoBan envia ao desenvolvedor, é mantida uma estatística sobre em quais dispositivos e versões do DSM o pacote roda. Isso ajuda no desenvolvimento.\n\nSó este registro é enviado:\nModelo (p. ex. DS920+)\nVersão DSM (p. ex. 7.2.2)\nBuild DSM (p. ex. 72806)\nVersão AutoBan (p. ex. 1.0.1)\nArquitetura (p. ex. x86_64)\nUID (valor aleatório)\n\nO UID não serve para identificar você nem o seu dispositivo. Ele só garante que os dados de uma instalação sejam contados uma única vez.",
+  "lang_help_telemetry": "Por meio de um pequeno relatório anônimo que o AutoBan envia ao desenvolvedor, é mantida uma estatística sobre em quais dispositivos e versões do DSM o pacote roda. Isso ajuda no desenvolvimento.\n\nSó este registro é enviado:\nModelo: {device}\nVersão DSM: {dsm}\nBuild DSM: {dsm_build}\nVersão AutoBan: {version}\nArquitetura: {arch}\nUID: {uuid}\nFunciona: {works}\n\nFunciona só é enviado depois de Sim ou Não.\n\nO UID não serve para identificar você nem o seu dispositivo. Ele só garante que os dados de uma instalação sejam contados uma única vez.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Erro",
-  "lang_status_recovery": "restaurado"
+  "lang_status_recovery": "restaurado",
+  "lang_legacy_task": "O Agendador de tarefas ainda tem uma tarefa ativa que executa o script antigo update_blocklist.sh. É recomendável desativá-la ou excluí-la. Abra Painel de controle → Agendador de tarefas. O nome da tarefa é {name}.",
+  "lang_legacy_tasks": "O Agendador de tarefas ainda tem tarefas ativas que executam o script antigo update_blocklist.sh. É recomendável desativá-las ou excluí-las. Abra Painel de controle → Agendador de tarefas. Os nomes das tarefas são {name}.",
+  "lang_works_ask": "O AutoBan funciona para você?",
+  "lang_works_yes": "Sim",
+  "lang_works_no": "Não",
+  "lang_works_later": "Mais tarde",
+  "lang_works_thanks": "Obrigado pelo aviso. Ótimo.",
+  "lang_works_sorry": "Que pena. Uma nota no GitHub ajuda.",
+  "lang_works_label": "Retorno",
+  "lang_works_state_yes": "funciona",
+  "lang_works_state_no": "não funciona",
+  "lang_works_unset": "ainda não"
 }

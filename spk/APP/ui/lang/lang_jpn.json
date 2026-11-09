@@ -103,8 +103,20 @@
   "lang_help_meta": "範囲またはネットマスクのときだけ。たとえばマスク。",
   "lang_help_progress": "スクリプトを root で直接実行したときだけ進行を表示します。",
   "lang_help_debug": "実行時間を 1 行、var/perf/last.ndjson に書き込みます。",
-  "lang_help_telemetry": "AutoBan が開発者に送る小さな匿名レポートにより、どの機器・DSM バージョンでパッケージが動いているかの統計が取られます。これは開発の助けになります。\n\n送信されるのは次の記録だけです：\nモデル（例：DS920+）\nDSM バージョン（例：7.2.2）\nDSM ビルド（例：72806）\nAutoBan バージョン（例：1.0.1）\nアーキテクチャ（例：x86_64）\nUID（乱数）\n\nUID はあなたや機器の識別には使いません。インストールのデータが一度だけ数えられるようにするためだけに使います。",
+  "lang_help_telemetry": "AutoBan が開発者に送る小さな匿名レポートにより、どの機器・DSM バージョンでパッケージが動いているかの統計が取られます。これは開発の助けになります。\n\n送信されるのは次の記録だけです：\nモデル: {device}\nDSM バージョン: {dsm}\nDSM ビルド: {dsm_build}\nAutoBan バージョン: {version}\nアーキテクチャ: {arch}\nUID: {uuid}\n動作: {works}\n\n「動作」は「はい」または「いいえ」を選んだときだけ送信されます。\n\nUID はあなたや機器の識別には使いません。インストールのデータが一度だけ数えられるようにするためだけに使います。",
   "lang_status_ok": "正常",
   "lang_status_fail": "エラー",
-  "lang_status_recovery": "復旧"
+  "lang_status_recovery": "復旧",
+  "lang_legacy_task": "タスク スケジューラに、古い update_blocklist.sh を実行する有効なタスクが残っています。無効にするか削除してください。コントロール パネル → タスク スケジューラを開きます。タスク名は {name} です。",
+  "lang_legacy_tasks": "タスク スケジューラに、古い update_blocklist.sh を実行する有効なタスクが複数残っています。無効にするか削除してください。コントロール パネル → タスク スケジューラを開きます。タスク名は {name} です。",
+  "lang_works_ask": "AutoBan は動いていますか？",
+  "lang_works_yes": "はい",
+  "lang_works_no": "いいえ",
+  "lang_works_later": "あとで",
+  "lang_works_thanks": "報告ありがとうございます。順調です。",
+  "lang_works_sorry": "残念です。GitHub へのメモが助けになります。",
+  "lang_works_label": "動作確認",
+  "lang_works_state_yes": "動作する",
+  "lang_works_state_no": "動作しない",
+  "lang_works_unset": "まだない"
 }

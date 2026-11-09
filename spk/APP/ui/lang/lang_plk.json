@@ -103,8 +103,20 @@
   "lang_help_meta": "Tylko przy zakresie lub masce sieci, na przykład maska.",
   "lang_help_progress": "Wskaźnik postępu tylko przy bezpośrednim uruchomieniu skryptu jako root.",
   "lang_help_debug": "Zapisuje wiersz z czasem działania do var/perf/last.ndjson.",
-  "lang_help_telemetry": "Za pomocą krótkiego anonimowego zgłoszenia, które AutoBan wysyła do dewelopera, prowadzona jest statystyka, na jakich urządzeniach i wersjach DSM działa pakiet. To pomaga w rozwoju.\n\nWysyłany jest tylko ten zestaw danych:\nModel (np. DS920+)\nWersja DSM (np. 7.2.2)\nKompilacja DSM (np. 72806)\nWersja AutoBan (np. 1.0.1)\nArchitektura (np. x86_64)\nUID (wartość losowa)\n\nUID nie służy do identyfikacji Ciebie ani Twojego urządzenia. Zapewnia wyłącznie, że dane jednej instalacji są liczone tylko raz.",
+  "lang_help_telemetry": "Za pomocą krótkiego anonimowego zgłoszenia, które AutoBan wysyła do dewelopera, prowadzona jest statystyka, na jakich urządzeniach i wersjach DSM działa pakiet. To pomaga w rozwoju.\n\nWysyłany jest tylko ten zestaw danych:\nModel: {device}\nWersja DSM: {dsm}\nKompilacja DSM: {dsm_build}\nWersja AutoBan: {version}\nArchitektura: {arch}\nUID: {uuid}\nDziała: {works}\n\nDziała jest wysyłane tylko po wybraniu Tak lub Nie.\n\nUID nie służy do identyfikacji Ciebie ani Twojego urządzenia. Zapewnia wyłącznie, że dane jednej instalacji są liczone tylko raz.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Błąd",
-  "lang_status_recovery": "przywrócono"
+  "lang_status_recovery": "przywrócono",
+  "lang_legacy_task": "Harmonogram zadań nadal ma aktywne zadanie, które uruchamia stary skrypt update_blocklist.sh. Warto je wyłączyć lub usunąć. Otwórz Panel sterowania → Harmonogram zadań. Nazwa zadania to {name}.",
+  "lang_legacy_tasks": "Harmonogram zadań nadal ma aktywne zadania, które uruchamiają stary skrypt update_blocklist.sh. Warto je wyłączyć lub usunąć. Otwórz Panel sterowania → Harmonogram zadań. Nazwy zadań to {name}.",
+  "lang_works_ask": "Czy AutoBan u Ciebie działa?",
+  "lang_works_yes": "Tak",
+  "lang_works_no": "Nie",
+  "lang_works_later": "Później",
+  "lang_works_thanks": "Dziękujemy za zgłoszenie. Świetnie.",
+  "lang_works_sorry": "Szkoda. Notatka na GitHubie pomaga.",
+  "lang_works_label": "Zgłoszenie",
+  "lang_works_state_yes": "działa",
+  "lang_works_state_no": "nie działa",
+  "lang_works_unset": "jeszcze nie"
 }

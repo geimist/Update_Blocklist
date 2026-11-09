@@ -103,8 +103,20 @@
   "lang_help_meta": "Uniquement pour une plage ou un masque réseau, par exemple le masque.",
   "lang_help_progress": "Affichage de la progression seulement lors de l'appel direct du script en tant que root.",
   "lang_help_debug": "Écrit une ligne avec la durée d'exécution dans var/perf/last.ndjson.",
-  "lang_help_telemetry": "Grâce à un petit rapport anonyme qu’AutoBan envoie au développeur, des statistiques indiquent sur quels appareils et quelles versions de DSM le paquet tourne. Cela aide au développement.\n\nSeul cet enregistrement est envoyé :\nModèle (p. ex. DS920+)\nVersion DSM (p. ex. 7.2.2)\nBuild DSM (p. ex. 72806)\nVersion AutoBan (p. ex. 1.0.1)\nArchitecture (p. ex. x86_64)\nUID (valeur aléatoire)\n\nL’UID ne sert pas à vous identifier ni à identifier votre appareil. Elle garantit uniquement que les données d’une installation ne sont comptées qu’une fois.",
+  "lang_help_telemetry": "Grâce à un petit rapport anonyme qu’AutoBan envoie au développeur, des statistiques indiquent sur quels appareils et quelles versions de DSM le paquet tourne. Cela aide au développement.\n\nSeul cet enregistrement est envoyé :\nModèle : {device}\nVersion DSM : {dsm}\nBuild DSM : {dsm_build}\nVersion AutoBan : {version}\nArchitecture : {arch}\nUID : {uuid}\nFonctionne : {works}\n\n« Fonctionne » n’est envoyé qu’après un Oui ou un Non.\n\nL’UID ne sert pas à vous identifier ni à identifier votre appareil. Elle garantit uniquement que les données d’une installation ne sont comptées qu’une fois.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Erreur",
-  "lang_status_recovery": "rétabli"
+  "lang_status_recovery": "rétabli",
+  "lang_legacy_task": "Le planificateur de tâches contient encore une tâche active qui appelle l'ancien script update_blocklist.sh. Il est recommandé de la désactiver ou de la supprimer. Ouvrez Panneau de configuration → Planificateur de tâches. Le nom de la tâche est {name}.",
+  "lang_legacy_tasks": "Le planificateur de tâches contient encore des tâches actives qui appellent l'ancien script update_blocklist.sh. Il est recommandé de les désactiver ou de les supprimer. Ouvrez Panneau de configuration → Planificateur de tâches. Les noms des tâches sont {name}.",
+  "lang_works_ask": "AutoBan fonctionne-t-il chez vous ?",
+  "lang_works_yes": "Oui",
+  "lang_works_no": "Non",
+  "lang_works_later": "Plus tard",
+  "lang_works_thanks": "Merci pour le retour. Parfait.",
+  "lang_works_sorry": "Dommage. Un signalement sur GitHub aide.",
+  "lang_works_label": "Retour",
+  "lang_works_state_yes": "fonctionne",
+  "lang_works_state_no": "ne fonctionne pas",
+  "lang_works_unset": "pas encore"
 }

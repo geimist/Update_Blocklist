@@ -103,8 +103,20 @@
   "lang_help_meta": "Alleen bij bereik of netmasker, bijvoorbeeld het masker.",
   "lang_help_progress": "Voortgang alleen bij directe aanroep van het script als root.",
   "lang_help_debug": "Schrijft een regel met de looptijd naar var/perf/last.ndjson.",
-  "lang_help_telemetry": "Via een klein anoniem bericht dat AutoBan naar de ontwikkelaar stuurt, wordt bijgehouden op welke apparaten en DSM-versies het pakket draait. Dat helpt bij de ontwikkeling.\n\nAlleen dit record wordt verstuurd:\nModel (bijv. DS920+)\nDSM-versie (bijv. 7.2.2)\nDSM-build (bijv. 72806)\nAutoBan-versie (bijv. 1.0.1)\nArchitectuur (bijv. x86_64)\nUID (willekeurige waarde)\n\nDe UID dient niet om jou of je apparaat te identificeren. Ze zorgt er alleen voor dat de gegevens van een installatie één keer worden geteld.",
+  "lang_help_telemetry": "Via een klein anoniem bericht dat AutoBan naar de ontwikkelaar stuurt, wordt bijgehouden op welke apparaten en DSM-versies het pakket draait. Dat helpt bij de ontwikkeling.\n\nAlleen dit record wordt verstuurd:\nModel: {device}\nDSM-versie: {dsm}\nDSM-build: {dsm_build}\nAutoBan-versie: {version}\nArchitectuur: {arch}\nUID: {uuid}\nWerkt: {works}\n\nWerkt wordt alleen meegestuurd nadat je Ja of Nee kiest.\n\nDe UID dient niet om jou of je apparaat te identificeren. Ze zorgt er alleen voor dat de gegevens van een installatie één keer worden geteld.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Fout",
-  "lang_status_recovery": "hersteld"
+  "lang_status_recovery": "hersteld",
+  "lang_legacy_task": "De taakplanner heeft nog een actieve taak die het oude script update_blocklist.sh uitvoert. Het is aan te raden deze uit te schakelen of te verwijderen. Open Configuratiescherm → Taakplanner. De naam van de taak is {name}.",
+  "lang_legacy_tasks": "De taakplanner heeft nog actieve taken die het oude script update_blocklist.sh uitvoeren. Het is aan te raden deze uit te schakelen of te verwijderen. Open Configuratiescherm → Taakplanner. De namen van de taken zijn {name}.",
+  "lang_works_ask": "Werkt AutoBan bij jou?",
+  "lang_works_yes": "Ja",
+  "lang_works_no": "Nee",
+  "lang_works_later": "Later",
+  "lang_works_thanks": "Bedankt voor de melding. Prima.",
+  "lang_works_sorry": "Jammer. Een melding op GitHub helpt.",
+  "lang_works_label": "Terugkoppeling",
+  "lang_works_state_yes": "werkt",
+  "lang_works_state_no": "werkt niet",
+  "lang_works_unset": "nog geen"
 }

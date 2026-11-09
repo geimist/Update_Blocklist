@@ -23,6 +23,7 @@
 # version 0.11 by geimist       16.08.2026 / DSM 7.4    ➜ fix: trap/exit-codes, pipefail, SQL-guard, IPv4-validation order, GeoIP batch        #
 # version 0.12 by geimist       28.10.2026 / DSM 7.4    ➜ exit 1/2 only after consecutive failures / successes                                  #
 # version 0.13 by geimist       29.10.2026 / DSM 7.4    ➜ optional IPv6 import (IMPORT_IPV6=1), off by default                                  #
+# version 0.14 by geimist       09.11.2026 / DSM 7.4    ➜ expired IPs are removed or renewed in one transaction after a successful download   #
 #                                                                                                                                               #
 #################################################################################################################################################
 
@@ -582,15 +583,101 @@ END {
 '
 }
 
+# Online list and the local export are sorted. The diff is only new addresses
+# plus expired ones that are still online. Rows that are still valid are not rewritten.
+build_workset() {
+    local rows="$1" online="$2" now="$3"
+    local all_out="$4" expired_out="$5" insert_out="$6" renew_out="$7" delete_out="$8" diff_out="$9"
+    local raw_all="${work_tmp}/local.unsorted"
+    local raw_expired="${work_tmp}/expired.unsorted"
+    : > "$raw_all"
+    : > "$raw_expired"
+    awk -F '\t' -v now="$now" -v all="$raw_all" -v expired="$raw_expired" '
+        {
+            ip = $1
+            expiry = $2
+            gsub(/^[ \t]+|[ \t]+$/, "", ip)
+            gsub(/^[ \t]+|[ \t]+$/, "", expiry)
+            if (ip == "") next
+            print ip > all
+            if (expiry ~ /^[0-9]+$/ && (expiry + 0) > 0 && (expiry + 0) <= (now + 0))
+                print ip > expired
+        }
+    ' "$rows" || return 1
+    sort -u "$raw_all" > "$all_out" || return 1
+    sort -u "$raw_expired" > "$expired_out" || return 1
+    comm -23 "$online" "$all_out" > "$insert_out" || return 1
+    comm -12 "$expired_out" "$online" > "$renew_out" || return 1
+    comm -23 "$expired_out" "$online" > "$delete_out" || return 1
+    sort -m "$insert_out" "$renew_out" > "$diff_out" || return 1
+}
+
+# Accepted is the diff after GeoIP. Renewals filtered out there are deleted with the rest.
+split_accepted() {
+    local accepted="$1" insert_c="$2" renew_c="$3" delete_base="$4"
+    local renew_out="$5" insert_out="$6" delete_out="$7"
+    local sorted="${work_tmp}/accepted.sorted"
+    local rejected="${work_tmp}/renew.rejected"
+    sort -u "$accepted" > "$sorted" || return 1
+    comm -12 "$renew_c" "$sorted" > "$renew_out" || return 1
+    comm -23 "$renew_c" "$sorted" > "$rejected" || return 1
+    comm -12 "$insert_c" "$sorted" > "$insert_out" || return 1
+    sort -m "$delete_base" "$rejected" > "$delete_out" || return 1
+}
+
+write_apply_sql() {
+    local del="$1" renew="$2" ins="$3" record="$4" expire="$5" out="$6"
+    {
+        printf '.bail on\nBEGIN;\n'
+        awk -v now="$record" '
+            {
+                ip = $0
+                gsub(/^[ \t]+|[ \t]+$/, "", ip)
+                if (ip !~ /^[0-9A-Fa-f:.]+$/) next
+                printf "DELETE FROM AutoBlockIP WHERE IP=\047%s\047 AND Deny=\0471\047 AND ExpireTime != \0470\047 AND ExpireTime <= %s;\n", ip, now
+            }
+        ' "$del"
+        AB_META="$META" awk -v now="$record" -v rec="$record" -v expiry="$expire" -v deny="$Deny" -v typ="$TYPE" '
+            BEGIN {
+                meta = ENVIRON["AB_META"]
+                gsub(/\047/, "\047\047", meta)
+            }
+            {
+                ip = $0
+                gsub(/^[ \t]+|[ \t]+$/, "", ip)
+                if (ip !~ /^[0-9A-Fa-f:.]+$/) next
+                printf "UPDATE AutoBlockIP SET RecordTime=\047%s\047, ExpireTime=\047%s\047, Deny=\047%s\047, Type=\047%s\047, Meta=\047%s\047 WHERE IP=\047%s\047 AND Deny=\0471\047 AND ExpireTime != \0470\047 AND ExpireTime <= %s;\n", rec, expiry, deny, typ, meta, ip, now
+            }
+        ' "$renew"
+        if [ -s "$renew" ]; then
+            AB_RECORD="$record" AB_EXPIRE="$expire" AB_DENY="$Deny" AB_TYPE="$TYPE" AB_META="$META" \
+                filter_addrs sql < "$renew"
+        fi
+        if [ -s "$ins" ]; then
+            AB_RECORD="$record" AB_EXPIRE="$expire" AB_DENY="$Deny" AB_TYPE="$TYPE" AB_META="$META" \
+                filter_addrs sql < "$ins"
+        fi
+        printf 'COMMIT;\n'
+    } > "$out"
+}
+
 # create temporary working directory & prepare variables
 # ---------------------------------------------------------------------
     work_tmp=$(mktemp -d -t tmp.XXXXXXXXXX)
     trap 'rm -rf "${work_tmp}"' EXIT
 
-    before_list="${work_tmp}/before.txt"
     online_list="${work_tmp}/online_list.txt"
     blocklist_list="${work_tmp}/blocklist.txt"
-    sql_statement="${work_tmp}/insert_statement.sql"
+    sql_statement="${work_tmp}/apply.sql"
+    rows_list="${work_tmp}/rows.txt"
+    all_ips="${work_tmp}/local.txt"
+    expired_ips="${work_tmp}/expired.txt"
+    insert_candidates="${work_tmp}/insert.candidates.txt"
+    renew_candidates="${work_tmp}/renew.candidates.txt"
+    delete_base="${work_tmp}/delete.base.txt"
+    renew_final="${work_tmp}/renew.txt"
+    insert_final="${work_tmp}/insert.final.txt"
+    delete_final="${work_tmp}/delete.txt"
 
     countadded=0
     db_path="/etc/synoautoblock.db"
@@ -609,19 +696,6 @@ END {
     perf_phase_begin "sqlite_count_before"
     countbefore=$(sqlite3 "${db_path}" "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )
     perf_phase_end "sqlite_count_before" "countbefore=${countbefore}"
-
-# delete IP if expired: 
-    perf_phase_begin "sqlite_delete_expired"
-    CountExpiredIP=$(sqlite3 "${db_path}" "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' AND NOT ExpireTime='0' ")
-    sqlite3 "${db_path}" "DELETE FROM AutoBlockIP WHERE ExpireTime <= $UNIXTIME AND Deny='1' AND NOT ExpireTime='0' "
-    perf_phase_end "sqlite_delete_expired" "expired=${CountExpiredIP}"
-
-# current IP-list:
-    perf_phase_begin "sqlite_export_before_list"
-    sqlite3 -header -csv "${db_path}" "select IP FROM AutoBlockIP WHERE Deny='1' ORDER BY IP ASC;" | sed -e '1d' | sort > "${before_list}"
-    _before_lines=$(wc -l < "${before_list}" | tr -d ' ')
-    _db_bytes=$(wc -c < "${db_path}" 2>/dev/null | tr -d ' ')
-    perf_phase_end "sqlite_export_before_list" "beforeLines=${_before_lines}" "dbBytes=${_db_bytes:-0}"
 
 # load online IP-list:
     perf_phase_begin "download_blocklist"
@@ -653,10 +727,22 @@ END {
 
     echo "count of IPs in list:         ${_online_lines}"
 
-# filter diffs - only diffs from left to right:
-    perf_phase_begin "diff_filter"
-    diff "${before_list}" "${online_list}" | grep '^>' | sed -e 's/> //' > "${blocklist_list}" 
-    perf_phase_end "diff_filter"
+# Snapshot after a successful download. A failed download leaves the live database untouched.
+    perf_phase_begin "sqlite_export_rows"
+    if ! sqlite3 "${db_path}" "SELECT IP || char(9) || ExpireTime FROM AutoBlockIP WHERE Deny='1';" > "${rows_list}"; then
+        echo "system database could not be read"
+        function_exit 1
+    fi
+    _db_bytes=$(wc -c < "${db_path}" 2>/dev/null | tr -d ' ')
+    perf_phase_end "sqlite_export_rows" "rowBytes=$(wc -c < "${rows_list}" | tr -d ' ')" "dbBytes=${_db_bytes:-0}"
+
+    perf_phase_begin "workset"
+    build_workset "${rows_list}" "${online_list}" "${UNIXTIME}" \
+        "${all_ips}" "${expired_ips}" "${insert_candidates}" "${renew_candidates}" "${delete_base}" "${blocklist_list}" \
+        || { echo "working set could not be built"; function_exit 1; }
+    CountExpiredIP=$(wc -l < "${expired_ips}" | tr -d '[:space:]')
+    CountExpiredIP=${CountExpiredIP:-0}
+    perf_phase_end "workset" "expired=${CountExpiredIP}"
 
 # count of diffs:
     countofdiffs=$(wc -l < "${blocklist_list}" | tr -d ' ')
@@ -735,17 +821,27 @@ while read -r BLOCKED_IP ; do
 done < "${blocklist_list}"
 perf_phase_end "loop_process_diffs" "processed=${_loop_i:-0}" "countadded=${countadded}"
 
-# SQL nur schreiben, wenn tatsächlich Zeilen hinzugefügt wurden (sonst Syntaxfehler)
-if [ "${countadded}" -ge 1 ] ; then
+split_accepted "${work_tmp}/accepted.txt" "${insert_candidates}" "${renew_candidates}" "${delete_base}" \
+    "${renew_final}" "${insert_final}" "${delete_final}" \
+    || { echo "working set could not be built"; function_exit 1; }
+delete_count=$(wc -l < "${delete_final}" | tr -d '[:space:]')
+renew_count=$(wc -l < "${renew_final}" | tr -d '[:space:]')
+insert_count=$(wc -l < "${insert_final}" | tr -d '[:space:]')
+delete_count=${delete_count:-0}
+renew_count=${renew_count:-0}
+insert_count=${insert_count:-0}
+if [ "${delete_count}" -ge 1 ] || [ "${renew_count}" -ge 1 ] || [ "${insert_count}" -ge 1 ]; then
     perf_phase_begin "sqlite_prepare_sql"
-    AB_RECORD="${UNIXTIME}" AB_EXPIRE="${UNIXTIME_DELETE_IP}" AB_DENY="${Deny}" AB_TYPE="${TYPE}" AB_META="${META}" \
-        filter_addrs sql < "${work_tmp}/accepted.txt" > "${sql_statement}"
+    write_apply_sql "${delete_final}" "${renew_final}" "${insert_final}" "${UNIXTIME}" "${UNIXTIME_DELETE_IP}" "${sql_statement}"
     _sql_bytes=$(wc -c < "${sql_statement}" | tr -d ' ')
-    perf_phase_end "sqlite_prepare_sql" "sqlBytes=${_sql_bytes}"
+    perf_phase_end "sqlite_prepare_sql" "sqlBytes=${_sql_bytes}" "delete=${delete_count}" "renew=${renew_count}" "insert=${insert_count}"
     printf "\n\nwrite DB ...\n"
-    perf_phase_begin "sqlite_insert"
-    sqlite3 "${db_path}" < "${sql_statement}"
-    perf_phase_end "sqlite_insert" "countadded=${countadded}"
+    perf_phase_begin "sqlite_apply"
+    if ! sqlite3 "${db_path}" < "${sql_statement}"; then
+        echo "system database was not updated"
+        function_exit 1
+    fi
+    perf_phase_end "sqlite_apply" "countadded=${countadded}"
 fi
 
 perf_log "run" "complete" "totalSec=$(($(date +%s)-UNIXTIME))" "countofdiffs=${countofdiffs}" "countadded=${countadded}" "countbefore=${countbefore}" "expired=${CountExpiredIP}" "perfLog=${_perf_log_file}"
@@ -760,7 +856,7 @@ if [ "${LOGLEVEL}" -eq 1 ] || [ "${LOGLEVEL}" -eq 2 ]; then
     echo "count of diffs:               ${countofdiffs}"
     echo "added IPs:                    ${countadded}"
     echo "IP skipped by GeoIP:          ${skipByGeoIP}"
-    echo "expired IPs (deleted):        ${CountExpiredIP} (set expiry time: ${DELETE_IP_AFTER} days)"
+    echo "expired IPs:                  ${CountExpiredIP} (removed or renewed, expiry ${DELETE_IP_AFTER} days)"
     echo "blocked IPs:                  before: ${countbefore} / current: $(sqlite3 "${db_path}" "SELECT count(IP) FROM AutoBlockIP WHERE Deny='1' " )"
 fi
 

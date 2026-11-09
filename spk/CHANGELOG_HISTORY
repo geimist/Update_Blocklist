@@ -1,3 +1,8 @@
+1.0.2 [2026-11-09]
+    ● The system database update has been optimized to prevent a theoretical short window of vulnerability between the deletion of expired IPs and the creation of new ones.
+    ● check & notify for legacy tasks (update_blocklist.sh)
+    ● feedback button to indicate whether AutoBan is working as intended or not
+
 1.0.1 [2026-11-03]
     ● change logging language to english
     ● GUI improvements

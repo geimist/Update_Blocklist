@@ -10,6 +10,8 @@
 #                                                                                                                                               #
 # version 0.13 by geimist       29.10.2026 / DSM 7  ➜ Paketmodus AutoBan, app.db, Helper, Log getrennt von Statistik                            #
 # version 0.14 by geimist       29.10.2026 / DSM 7  ➜ optional IPv6 import (import_ipv6), off by default                                       #
+# version 0.15 by geimist       09.11.2026 / DSM 7  ➜ Ablauf erst nach erfolgreichem Download, in einer Transaktion                           #
+# version 0.16 by geimist       09.11.2026 / DSM 7  ➜ monatliche Telemetrie kann works=0|1 der aktuellen Version mitsenden                      #
 #################################################################################################################################################
 
 # --- Standalone-Voreinstellungen (im Paket kommen die Werte aus app.db) ---
@@ -250,6 +252,21 @@ telemetry_kv() {
     sed -n "s/^${key}=\"\\(.*\\)\"/\\1/p" "$file" | head -n1
 }
 
+# syno_hw_version hängt bei manchen Plus-Modellen ein -j an (DS916+-j).
+# upnpmodelname ist der Modellname ohne dieses Suffix. Echte j-Modelle heißen DS216j.
+telemetry_device() {
+    local model=""
+    if [ -x /usr/syno/bin/synogetkeyvalue ]; then
+        model=$(/usr/syno/bin/synogetkeyvalue /etc.defaults/synoinfo.conf upnpmodelname 2>/dev/null || true)
+    fi
+    model=$(printf '%s' "$model" | tr -d '[:space:]')
+    if [ -z "$model" ]; then
+        model=$(tr -d '[:space:]' < /proc/sys/kernel/syno_hw_version 2>/dev/null || true)
+        model=${model%-j}
+    fi
+    printf '%s' "$model"
+}
+
 telemetry_maybe_send() {
     [ "$PACKAGE_MODE" = 1 ] || return 0
     local enabled month last uid endpoint body dest
@@ -270,8 +287,8 @@ telemetry_maybe_send() {
         }
         state_set_text telemetry_uuid "$uid"
     fi
-    local device dsm dsm_build version arch
-    device=$(tr -d '[:space:]' < /proc/sys/kernel/syno_hw_version 2>/dev/null || true)
+    local device dsm dsm_build version arch works stored stored_ver
+    device=$(telemetry_device)
     dsm=$(telemetry_kv /etc.defaults/VERSION productversion)
     dsm_build=$(telemetry_kv /etc.defaults/VERSION buildnumber)
     version=$(telemetry_kv /var/packages/AutoBan/INFO version)
@@ -280,36 +297,47 @@ telemetry_maybe_send() {
         log DEBUG "telemetry skipped: missing device, version or arch"
         return 0
     }
+    works=""
+    stored=$(state_get_text telemetry_works)
+    stored_ver=$(state_get_text telemetry_works_version)
+    if [ "$stored_ver" = "$version" ] && { [ "$stored" = "0" ] || [ "$stored" = "1" ]; }; then
+        works="$stored"
+    fi
     dest="${PKG_VAR}/tmp/telemetry.out"
     mkdir -p "${PKG_VAR}/tmp"
     if command -v python3 >/dev/null 2>&1; then
         if ! python3 -c 'import sys,urllib.parse,urllib.request
 url, dest = sys.argv[1], sys.argv[2]
-q = urllib.parse.urlencode({
+q = {
     "uuid": sys.argv[3], "device": sys.argv[4], "dsm": sys.argv[5],
     "dsm_build": sys.argv[6], "version": sys.argv[7], "arch": sys.argv[8],
-})
+}
+if len(sys.argv) > 9 and sys.argv[9] in ("0", "1"):
+    q["works"] = sys.argv[9]
+q = urllib.parse.urlencode(q)
 req = urllib.request.Request(url + "?" + q)
 try:
     with urllib.request.urlopen(req, timeout=10) as r:
         open(dest, "wb").write(r.read())
 except Exception:
     sys.exit(1)
-' "$endpoint" "$dest" "$uid" "$device" "$dsm" "$dsm_build" "$version" "$arch"; then
+' "$endpoint" "$dest" "$uid" "$device" "$dsm" "$dsm_build" "$version" "$arch" "$works"; then
             log DEBUG "telemetry request failed"
             rm -f "$dest"
             return 0
         fi
     elif command -v wget >/dev/null 2>&1; then
-        if ! wget -q --timeout=10 --tries=1 -O "$dest" \
-            "${endpoint}?uuid=${uid}&device=${device}&dsm=${dsm}&dsm_build=${dsm_build}&version=${version}&arch=${arch}"; then
+        tel_url="${endpoint}?uuid=${uid}&device=${device}&dsm=${dsm}&dsm_build=${dsm_build}&version=${version}&arch=${arch}"
+        [ -z "$works" ] || tel_url="${tel_url}&works=${works}"
+        if ! wget -q --timeout=10 --tries=1 -O "$dest" "$tel_url"; then
             log DEBUG "telemetry request failed"
             rm -f "$dest"
             return 0
         fi
     elif command -v curl >/dev/null 2>&1; then
-        if ! curl -fsS --max-time 10 -o "$dest" \
-            "${endpoint}?uuid=${uid}&device=${device}&dsm=${dsm}&dsm_build=${dsm_build}&version=${version}&arch=${arch}"; then
+        tel_url="${endpoint}?uuid=${uid}&device=${device}&dsm=${dsm}&dsm_build=${dsm_build}&version=${version}&arch=${arch}"
+        [ -z "$works" ] || tel_url="${tel_url}&works=${works}"
+        if ! curl -fsS --max-time 10 -o "$dest" "$tel_url"; then
             log DEBUG "telemetry request failed"
             rm -f "$dest"
             return 0
@@ -410,25 +438,55 @@ db_count() {
     fi
 }
 
-db_export() {
+db_export_rows() {
     local dest="$1"
     if [ "$PACKAGE_MODE" = 1 ]; then
-        helper_call export-deny | sort > "$dest"
+        helper_call export-rows > "$dest"
     else
-        sqlite3 -header -csv "$SYS_DB" "SELECT IP FROM AutoBlockIP WHERE Deny='1' ORDER BY IP ASC;" | sed -e '1d' | sort > "$dest"
+        sqlite3 "$SYS_DB" "SELECT IP || char(9) || ExpireTime FROM AutoBlockIP WHERE Deny='1';" > "$dest"
     fi
 }
 
-db_delete_expired() {
-    local now="$1"
-    if [ "$PACKAGE_MODE" = 1 ]; then
-        helper_call delete-expired "$now"
-    else
-        local n
-        n=$(sqlite3 "$SYS_DB" "SELECT count(IP) FROM AutoBlockIP WHERE ExpireTime <= ${now} AND Deny='1' AND NOT ExpireTime='0'")
-        sqlite3 "$SYS_DB" "DELETE FROM AutoBlockIP WHERE ExpireTime <= ${now} AND Deny='1' AND NOT ExpireTime='0'"
-        printf '%s\n' "$n"
-    fi
+# Online-Liste und lokaler Export sind sortiert. Der Diff enthält nur neue
+# Adressen und abgelaufene, die noch online sind. Gültige Zeilen bleiben unberührt.
+build_workset() {
+    local rows="$1" online="$2" now="$3"
+    local all_out="$4" expired_out="$5" insert_out="$6" renew_out="$7" delete_out="$8" diff_out="$9"
+    local raw_all="${work_tmp}/local.unsorted"
+    local raw_expired="${work_tmp}/expired.unsorted"
+    : > "$raw_all"
+    : > "$raw_expired"
+    awk -F '\t' -v now="$now" -v all="$raw_all" -v expired="$raw_expired" '
+        {
+            ip = $1
+            expiry = $2
+            gsub(/^[ \t]+|[ \t]+$/, "", ip)
+            gsub(/^[ \t]+|[ \t]+$/, "", expiry)
+            if (ip == "") next
+            print ip > all
+            if (expiry ~ /^[0-9]+$/ && (expiry + 0) > 0 && (expiry + 0) <= (now + 0))
+                print ip > expired
+        }
+    ' "$rows" || return 1
+    sort -u "$raw_all" > "$all_out" || return 1
+    sort -u "$raw_expired" > "$expired_out" || return 1
+    comm -23 "$online" "$all_out" > "$insert_out" || return 1
+    comm -12 "$expired_out" "$online" > "$renew_out" || return 1
+    comm -23 "$expired_out" "$online" > "$delete_out" || return 1
+    sort -m "$insert_out" "$renew_out" > "$diff_out" || return 1
+}
+
+# Accepted ist der Diff nach GeoIP. Herausgefilterte Erneuerungen werden mitgelöscht.
+split_accepted() {
+    local accepted="$1" insert_c="$2" renew_c="$3" delete_base="$4"
+    local renew_out="$5" insert_out="$6" delete_out="$7"
+    local sorted="${work_tmp}/accepted.sorted"
+    local rejected="${work_tmp}/renew.rejected"
+    sort -u "$accepted" > "$sorted" || return 1
+    comm -12 "$renew_c" "$sorted" > "$renew_out" || return 1
+    comm -23 "$renew_c" "$sorted" > "$rejected" || return 1
+    comm -12 "$insert_c" "$sorted" > "$insert_out" || return 1
+    sort -m "$delete_base" "$rejected" > "$delete_out" || return 1
 }
 
 filter_addrs() {
@@ -664,20 +722,50 @@ END {
 '
 }
 
-db_insert_file() {
-    local file="$1" record="$2" expire="$3"
-    if [ ! -s "$file" ]; then
-        printf '0\n'
-        return 0
-    fi
+write_apply_sql() {
+    local del="$1" renew="$2" ins="$3" record="$4" expire="$5" out="$6"
+    {
+        printf '.bail on\nBEGIN;\n'
+        awk -v now="$record" '
+            {
+                ip = $0
+                gsub(/^[ \t]+|[ \t]+$/, "", ip)
+                if (ip !~ /^[0-9A-Fa-f:.]+$/) next
+                printf "DELETE FROM AutoBlockIP WHERE IP=\047%s\047 AND Deny=\0471\047 AND ExpireTime != \0470\047 AND ExpireTime <= %s;\n", ip, now
+            }
+        ' "$del"
+        AB_META="$META" awk -v now="$record" -v rec="$record" -v expiry="$expire" -v deny="$Deny" -v typ="$TYPE" '
+            BEGIN {
+                meta = ENVIRON["AB_META"]
+                gsub(/\047/, "\047\047", meta)
+            }
+            {
+                ip = $0
+                gsub(/^[ \t]+|[ \t]+$/, "", ip)
+                if (ip !~ /^[0-9A-Fa-f:.]+$/) next
+                printf "UPDATE AutoBlockIP SET RecordTime=\047%s\047, ExpireTime=\047%s\047, Deny=\047%s\047, Type=\047%s\047, Meta=\047%s\047 WHERE IP=\047%s\047 AND Deny=\0471\047 AND ExpireTime != \0470\047 AND ExpireTime <= %s;\n", rec, expiry, deny, typ, meta, ip, now
+            }
+        ' "$renew"
+        if [ -s "$renew" ]; then
+            AB_RECORD="$record" AB_EXPIRE="$expire" AB_DENY="$Deny" AB_TYPE="$TYPE" AB_META="$META" \
+                filter_addrs sql < "$renew"
+        fi
+        if [ -s "$ins" ]; then
+            AB_RECORD="$record" AB_EXPIRE="$expire" AB_DENY="$Deny" AB_TYPE="$TYPE" AB_META="$META" \
+                filter_addrs sql < "$ins"
+        fi
+        printf 'COMMIT;\n'
+    } > "$out"
+}
+
+db_apply() {
+    local del="$1" renew="$2" ins="$3" record="$4" expire="$5"
     if [ "$PACKAGE_MODE" = 1 ]; then
-        helper_call insert-batch "$file" "$record" "$expire" "$Deny" "$TYPE" "$META"
+        helper_call apply-batch "$del" "$renew" "$ins" "$record" "$expire" "$Deny" "$TYPE" "$META"
     else
-        local sql="${work_tmp}/insert.sql"
-        AB_RECORD="$record" AB_EXPIRE="$expire" AB_DENY="$Deny" AB_TYPE="$TYPE" AB_META="$META" \
-            filter_addrs sql < "$file" > "$sql"
+        local sql="${work_tmp}/apply.sql"
+        write_apply_sql "$del" "$renew" "$ins" "$record" "$expire" "$sql"
         sqlite3 "$SYS_DB" < "$sql"
-        wc -l < "$file" | tr -d ' '
     fi
 }
 
@@ -1002,10 +1090,18 @@ else
     work_tmp=$(mktemp -d -t autoban.XXXXXXXX)
 fi
 
-before_list="${work_tmp}/before.txt"
+rows_list="${work_tmp}/rows.txt"
 online_list="${work_tmp}/online.txt"
 blocklist_list="${work_tmp}/diff.txt"
 insert_list="${work_tmp}/insert.txt"
+all_ips="${work_tmp}/local.txt"
+expired_ips="${work_tmp}/expired.txt"
+insert_candidates="${work_tmp}/insert.candidates.txt"
+renew_candidates="${work_tmp}/renew.candidates.txt"
+delete_base="${work_tmp}/delete.base.txt"
+renew_final="${work_tmp}/renew.txt"
+insert_final="${work_tmp}/insert.final.txt"
+delete_final="${work_tmp}/delete.txt"
 : > "$insert_list"
 
 if [ -f "$SYS_DB" ]; then
@@ -1020,9 +1116,6 @@ countbefore=$(db_count | tr -d '[:space:]')
 countbefore=${countbefore:-0}
 UNIXTIME=$(date +%s)
 UNIXTIME_DELETE_IP=$(future_unix "$DELETE_IP_AFTER")
-CountExpiredIP=$(db_delete_expired "$UNIXTIME" | tr -d '[:space:]')
-CountExpiredIP=${CountExpiredIP:-0}
-db_export "$before_list"
 
 if ! download_primary > "${work_tmp}/primary_raw.txt"; then
     record_run fail "download failed"
@@ -1033,7 +1126,12 @@ sort -u "${work_tmp}/primary_raw.txt" > "${work_tmp}/primary_sorted.txt"
 download_extra | cat - "${work_tmp}/primary_sorted.txt" | filter_addrs list | sort -u > "$online_list"
 online_count=$(wc -l < "$online_list" | tr -d ' ')
 
-diff "$before_list" "$online_list" | grep '^>' | sed -e 's/^> //' > "$blocklist_list" || true
+db_export_rows "$rows_list" || { record_run fail "export failed"; log ERROR "system database could not be read"; function_exit 1; }
+build_workset "$rows_list" "$online_list" "$UNIXTIME" \
+    "$all_ips" "$expired_ips" "$insert_candidates" "$renew_candidates" "$delete_base" "$blocklist_list" \
+    || { record_run fail "workset failed"; log ERROR "working set could not be built"; function_exit 1; }
+CountExpiredIP=$(wc -l < "$expired_ips" | tr -d '[:space:]')
+CountExpiredIP=${CountExpiredIP:-0}
 countofdiffs=$(wc -l < "$blocklist_list" | tr -d ' ')
 log INFO "online ${online_count}, new ${countofdiffs}, expired ${CountExpiredIP}"
 
@@ -1094,9 +1192,19 @@ while IFS= read -r BLOCKED_IP; do
     fi
 done < "$blocklist_list"
 
-if [ "$countadded" -ge 1 ]; then
-    log INFO "writing ${countadded} IPs"
-    db_insert_file "$insert_list" "$UNIXTIME" "$UNIXTIME_DELETE_IP" >/dev/null
+split_accepted "$insert_list" "$insert_candidates" "$renew_candidates" "$delete_base" \
+    "$renew_final" "$insert_final" "$delete_final" \
+    || { record_run fail "workset failed"; log ERROR "working set could not be built"; function_exit 1; }
+delete_count=$(wc -l < "$delete_final" | tr -d '[:space:]')
+renew_count=$(wc -l < "$renew_final" | tr -d '[:space:]')
+insert_count=$(wc -l < "$insert_final" | tr -d '[:space:]')
+delete_count=${delete_count:-0}
+renew_count=${renew_count:-0}
+insert_count=${insert_count:-0}
+if [ "$delete_count" -ge 1 ] || [ "$renew_count" -ge 1 ] || [ "$insert_count" -ge 1 ]; then
+    log INFO "writing delete ${delete_count}, renew ${renew_count}, insert ${insert_count}"
+    db_apply "$delete_final" "$renew_final" "$insert_final" "$UNIXTIME" "$UNIXTIME_DELETE_IP" >/dev/null \
+        || { record_run fail "apply failed"; log ERROR "system database was not updated"; function_exit 1; }
 fi
 countafter=$(db_count | tr -d '[:space:]')
 countafter=${countafter:-0}
@@ -1108,7 +1216,7 @@ if [ "$PACKAGE_MODE" != 1 ] && { [ "$LOGLEVEL" -eq 1 ] || [ "$LOGLEVEL" -eq 2 ];
     printf 'count of diffs:               %s\n' "$countofdiffs"
     printf 'added IPs:                    %s\n' "$countadded"
     printf 'IP skipped by GeoIP:          %s\n' "$skipByGeoIP"
-    printf 'expired IPs (deleted):        %s (set expiry time: %s days)\n' "$CountExpiredIP" "$DELETE_IP_AFTER"
+    printf 'expired IPs:                  %s (removed or renewed, expiry %s days)\n' "$CountExpiredIP" "$DELETE_IP_AFTER"
     printf 'blocked IPs:                  before: %s / current: %s\n' "$countbefore" "$countafter"
 fi
 

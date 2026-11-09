@@ -103,8 +103,20 @@
   "lang_help_meta": "Nur bei Bereich oder Netzmaske, zum Beispiel die Maske.",
   "lang_help_progress": "Fortschrittsanzeige nur beim direkten Aufruf des Skripts als root.",
   "lang_help_debug": "Schreibt eine Zeile mit der Laufzeit nach var/perf/last.ndjson.",
-  "lang_help_telemetry": "Über eine kleine anonyme Meldung, die AutoBan an den Entwickler schickt, wird eine Statistik geführt, auf welchen Geräten und DSM-Versionen das Paket läuft. Das hilft bei der Entwicklung.\n\nGesendet wird nur dieser Datensatz:\nModell (z. B. DS920+)\nDSM-Version (z. B. 7.2.2)\nDSM-Build (z. B. 72806)\nAutoBan-Version (z. B. 1.0.1)\nArchitektur (z. B. x86_64)\nUID (Zufallswert)\n\nDie UID dient nicht zur Identifikation von dir oder deinem Gerät. Sie sorgt ausschließlich dafür, dass die Daten einer Installation zum Zählen einmalig sind.",
+  "lang_help_telemetry": "Über eine kleine anonyme Meldung, die AutoBan an den Entwickler schickt, wird eine Statistik geführt, auf welchen Geräten und DSM-Versionen das Paket läuft. Das hilft bei der Entwicklung.\n\nGesendet wird nur dieser Datensatz:\nModell: {device}\nDSM-Version: {dsm}\nDSM-Build: {dsm_build}\nAutoBan-Version: {version}\nArchitektur: {arch}\nUID: {uuid}\nFunktioniert: {works}\n\nFunktioniert wird nur gesendet, wenn du Ja oder Nein gewählt hast.\n\nDie UID dient nicht zur Identifikation von dir oder deinem Gerät. Sie sorgt ausschließlich dafür, dass die Daten einer Installation zum Zählen einmalig sind.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Fehler",
-  "lang_status_recovery": "wiederhergestellt"
+  "lang_status_recovery": "wiederhergestellt",
+  "lang_legacy_task": "Im DSM-Aufgabenplaner läuft noch ein aktiver Task mit dem alten Aufruf von update_blocklist.sh. Es ist empfehlenswert, diesen zu deaktivieren oder zu löschen. Öffne dazu die Systemsteuerung → Aufgabenplaner. Der Name der Aufgabe lautet {name}.",
+  "lang_legacy_tasks": "Im DSM-Aufgabenplaner laufen noch aktive Tasks mit dem alten Aufruf von update_blocklist.sh. Es ist empfehlenswert, diese zu deaktivieren oder zu löschen. Öffne dazu die Systemsteuerung → Aufgabenplaner. Die Namen der Aufgaben lauten {name}.",
+  "lang_works_ask": "Läuft AutoBan bei dir?",
+  "lang_works_yes": "Ja",
+  "lang_works_no": "Nein",
+  "lang_works_later": "Später",
+  "lang_works_thanks": "Danke für die Meldung. Prima.",
+  "lang_works_sorry": "Schade. Wenn du magst, hilf mit einem Hinweis.",
+  "lang_works_label": "Rückmeldung",
+  "lang_works_state_yes": "läuft",
+  "lang_works_state_no": "läuft nicht",
+  "lang_works_unset": "noch keine"
 }

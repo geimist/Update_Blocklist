@@ -103,8 +103,20 @@
   "lang_help_meta": "仅用于范围或网络掩码，例如掩码本身。",
   "lang_help_progress": "仅在以 root 直接运行脚本时显示进度。",
   "lang_help_debug": "向 var/perf/last.ndjson 写入一行运行时间。",
-  "lang_help_telemetry": "通过 AutoBan 向开发者发送的一条简短匿名报告，可以统计该软件包运行在哪些设备和 DSM 版本上。这有助于开发。\n\n仅发送以下记录：\n型号（例如 DS920+）\nDSM 版本（例如 7.2.2）\nDSM 内部版本（例如 72806）\nAutoBan 版本（例如 1.0.1）\n架构（例如 x86_64）\nUID（随机值）\n\nUID 不用于识别您或您的设备。它只用于确保一次安装的数据只被统计一次。",
+  "lang_help_telemetry": "通过 AutoBan 向开发者发送的一条简短匿名报告，可以统计该软件包运行在哪些设备和 DSM 版本上。这有助于开发。\n\n仅发送以下记录：\n型号：{device}\nDSM 版本：{dsm}\nDSM 内部版本：{dsm_build}\nAutoBan 版本：{version}\n架构：{arch}\nUID：{uuid}\n是否正常：{works}\n\n只有选择“是”或“否”后才会发送“是否正常”。\n\nUID 不用于识别您或您的设备。它只用于确保一次安装的数据只被统计一次。",
   "lang_status_ok": "正常",
   "lang_status_fail": "错误",
-  "lang_status_recovery": "已恢复"
+  "lang_status_recovery": "已恢复",
+  "lang_legacy_task": "DSM 任务计划中仍有一个正在运行的任务，它调用旧的 update_blocklist.sh。建议停用或删除该任务。请打开控制面板 → 任务计划。任务名称为 {name}。",
+  "lang_legacy_tasks": "DSM 任务计划中仍有正在运行的任务，它们调用旧的 update_blocklist.sh。建议停用或删除这些任务。请打开控制面板 → 任务计划。任务名称为 {name}。",
+  "lang_works_ask": "AutoBan 在你那里运行正常吗？",
+  "lang_works_yes": "是",
+  "lang_works_no": "否",
+  "lang_works_later": "稍后",
+  "lang_works_thanks": "感谢反馈。很好。",
+  "lang_works_sorry": "很遗憾。在 GitHub 上说明一下会有帮助。",
+  "lang_works_label": "反馈",
+  "lang_works_state_yes": "正常",
+  "lang_works_state_no": "不正常",
+  "lang_works_unset": "还没有"
 }

@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include "addr.h"
+#include "legacy_task.h"
 
 #define PROD_DB "/etc/synoautoblock.db"
 #define PROD_BACKUP "/var/packages/AutoBan/var/db_backups"
@@ -50,7 +51,7 @@ static void die_errno(const char *msg)
 
 static void usage(void)
 {
-    fprintf(stderr, "usage: ab-helper {ensure-schema|count|export-deny|delete-expired UNIX|insert-batch FILE RECORD EXPIRE DENY TYPE [META]|clear-blocklist|backup|restore SLOT|list-backups|export-db}\n");
+    fprintf(stderr, "usage: ab-helper {ensure-schema|count|export-deny|export-rows|delete-expired UNIX|insert-batch FILE RECORD EXPIRE DENY TYPE [META]|apply-batch DELETE RENEW INSERT RECORD EXPIRE DENY TYPE [META]|clear-blocklist|backup|restore SLOT|list-backups|export-db|legacy-task}\n");
 }
 
 static int parse_i64(const char *s, long long *out)
@@ -209,6 +210,13 @@ static void cmd_export(void)
         die("sqlite3 failed");
 }
 
+/* IP and ExpireTime, tab-separated. The shell sorts and decides the working set. */
+static void cmd_export_rows(void)
+{
+    if (run_sqlite("SELECT IP || char(9) || ExpireTime FROM AutoBlockIP WHERE Deny='1'", -1, 0, NULL, 0) != 0)
+        die("sqlite3 failed");
+}
+
 static void cmd_delete(const char *unix_s)
 {
     long long now;
@@ -347,6 +355,174 @@ static void cmd_insert(int argc, char **argv)
     }
     fputs("SELECT total_changes();\nCOMMIT;\n", sql);
     fclose(in);
+    fclose(sql);
+    while (got + 1 < sizeof buf) {
+        ssize_t n = read(outfd[0], buf + got, sizeof buf - 1 - got);
+        if (n < 0) {
+            if (errno == EINTR)
+                continue;
+            break;
+        }
+        if (n == 0)
+            break;
+        got += (size_t)n;
+    }
+    buf[got] = '\0';
+    close(outfd[0]);
+    if (wait_child(pid) != 0)
+        die("sqlite3 failed");
+    printf("%lld\n", strtoll(buf, NULL, 10));
+}
+
+static FILE *open_list(const char *file)
+{
+    char resolved[PATH_MAX];
+    int fd;
+    struct stat st;
+    FILE *fp;
+
+    if (under_dir(tmp_dir, file, resolved, sizeof resolved) != 0)
+        die("list file must be inside the temp directory");
+    fd = open(resolved, O_RDONLY | O_NOFOLLOW);
+    if (fd < 0)
+        die_errno("open list file");
+    if (fstat(fd, &st) != 0 || !S_ISREG(st.st_mode))
+        die("list file is not a regular file");
+    if (st.st_size > MAX_INSERT)
+        die("list file is too large");
+    fp = fdopen(fd, "r");
+    if (fp == NULL)
+        die("fdopen");
+    return fp;
+}
+
+static int next_ip(FILE *in, char *ip, size_t ipn, char *std, size_t stdn)
+{
+    char line[512];
+    char *p;
+    size_t len;
+
+    if (fgets(line, sizeof line, in) == NULL)
+        return -1;
+    p = line;
+    while (*p == ' ' || *p == '\t')
+        p++;
+    len = strlen(p);
+    while (len > 0 && (p[len - 1] == '\n' || p[len - 1] == '\r' || p[len - 1] == ' ' || p[len - 1] == '\t'))
+        p[--len] = '\0';
+    if (*p == '\0' || strchr(p, '\n') != NULL)
+        return 0;
+    if (!addr_canonical(p, ip, ipn, std, stdn))
+        return 0;
+    return 1;
+}
+
+static void emit_insert(FILE *sql, const char *ip, const char *std, long long record, long long expire,
+                        long long deny, long long typ, const char *meta)
+{
+    fprintf(sql,
+            "INSERT OR IGNORE INTO AutoBlockIP (IP, RecordTime, ExpireTime, Deny, IPStd, Type, Meta) VALUES ("
+            "'%s',%lld,%lld,%lld,'%s',%lld,",
+            ip, record, expire, deny, std, typ);
+    sql_escape(sql, meta);
+    fputs(");\n", sql);
+}
+
+/*
+ * One transaction: delete expired addresses that left the list, refresh the
+ * ones that are still listed, then insert genuinely new ones.
+ * RECORD is the new RecordTime and the cutoff (ExpireTime <= RECORD).
+ * A row whose expiry was moved into the future after the snapshot is left
+ * alone. ExpireTime 0 (permanent) and Deny 0 (whitelist) are never matched.
+ */
+static void cmd_apply(int argc, char **argv)
+{
+    const char *meta = "";
+    long long record, expire, deny, typ;
+    int pipefd[2], outfd[2];
+    pid_t pid;
+    FILE *del, *renew, *ins, *sql;
+    char buf[128];
+    size_t got = 0;
+    int kind;
+
+    if (argc != 7 && argc != 8)
+        die("apply-batch DELETE RENEW INSERT RECORD EXPIRE DENY TYPE [META]");
+    if (parse_i64(argv[3], &record) != 0)
+        die("bad record time");
+    if (parse_i64(argv[4], &expire) != 0)
+        die("bad expire time");
+    if (parse_i64(argv[5], &deny) != 0 || (deny != 0 && deny != 1))
+        die("deny must be 0 or 1");
+    if (parse_i64(argv[6], &typ) != 0 || typ < 0 || typ > 3)
+        die("type must be 0..3");
+    if (argc == 8) {
+        meta = argv[7];
+        if (strlen(meta) > 256 || strchr(meta, '\n') != NULL || strchr(meta, '\r') != NULL)
+            die("meta is too long");
+    }
+    del = open_list(argv[0]);
+    renew = open_list(argv[1]);
+    ins = open_list(argv[2]);
+    if (pipe(pipefd) != 0 || pipe(outfd) != 0)
+        die_errno("pipe");
+    pid = fork();
+    if (pid < 0)
+        die_errno("fork");
+    if (pid == 0) {
+        char *argv_sql[] = {
+            "sqlite3", "-batch",
+            "-cmd", ".timeout 5000",
+            "-cmd", ".headers off",
+            (char *)db_path, NULL
+        };
+        dup2(pipefd[0], STDIN_FILENO);
+        dup2(outfd[1], STDOUT_FILENO);
+        close(pipefd[0]);
+        close(pipefd[1]);
+        close(outfd[0]);
+        close(outfd[1]);
+        fclose(del);
+        fclose(renew);
+        fclose(ins);
+        execv(sqlite_bin, argv_sql);
+        _exit(127);
+    }
+    close(pipefd[0]);
+    close(outfd[1]);
+    sql = fdopen(pipefd[1], "w");
+    if (sql == NULL)
+        die("fdopen");
+    fputs(".bail on\nBEGIN;\n", sql);
+    fputs(schema_sql, sql);
+    fputs(";\n", sql);
+    for (kind = 0; kind < 3; kind++) {
+        FILE *in = kind == 0 ? del : (kind == 1 ? renew : ins);
+        char ip[64], std[64];
+        int got_ip;
+        while ((got_ip = next_ip(in, ip, sizeof ip, std, sizeof std)) != -1) {
+            if (got_ip == 0)
+                continue;
+            if (kind == 0) {
+                fprintf(sql,
+                        "DELETE FROM AutoBlockIP WHERE IP='%s' AND Deny='1' AND ExpireTime != '0' AND ExpireTime <= %lld;\n",
+                        ip, record);
+                continue;
+            }
+            if (kind == 1) {
+                fprintf(sql,
+                        "UPDATE AutoBlockIP SET RecordTime=%lld, ExpireTime=%lld, Deny=%lld, Type=%lld, Meta=",
+                        record, expire, deny, typ);
+                sql_escape(sql, meta);
+                fprintf(sql,
+                        " WHERE IP='%s' AND Deny='1' AND ExpireTime != '0' AND ExpireTime <= %lld;\n",
+                        ip, record);
+            }
+            emit_insert(sql, ip, std, record, expire, deny, typ, meta);
+        }
+        fclose(in);
+    }
+    fputs("SELECT total_changes();\nCOMMIT;\n", sql);
     fclose(sql);
     while (got + 1 < sizeof buf) {
         ssize_t n = read(outfd[0], buf + got, sizeof buf - 1 - got);
@@ -684,6 +860,10 @@ int main(int argc, char **argv)
         usage();
         return 2;
     }
+    if (strcmp(argv[i], "legacy-task") == 0 && i + 1 == argc) {
+        cmd_legacy_task();
+        return 0;
+    }
     find_sqlite();
     if (strcmp(argv[i], "ensure-schema") == 0 && i + 1 == argc)
         cmd_ensure();
@@ -691,10 +871,14 @@ int main(int argc, char **argv)
         cmd_count();
     else if (strcmp(argv[i], "export-deny") == 0 && i + 1 == argc)
         cmd_export();
+    else if (strcmp(argv[i], "export-rows") == 0 && i + 1 == argc)
+        cmd_export_rows();
     else if (strcmp(argv[i], "delete-expired") == 0 && i + 2 == argc)
         cmd_delete(argv[i + 1]);
     else if (strcmp(argv[i], "insert-batch") == 0)
         cmd_insert(argc - (i + 1), argv + i + 1);
+    else if (strcmp(argv[i], "apply-batch") == 0)
+        cmd_apply(argc - (i + 1), argv + i + 1);
     else if (strcmp(argv[i], "clear-blocklist") == 0 && i + 1 == argc)
         cmd_clear();
     else if (strcmp(argv[i], "backup") == 0 && i + 1 == argc)

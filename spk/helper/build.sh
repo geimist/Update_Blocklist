@@ -22,7 +22,7 @@ build_one() {
     echo "build helper $name"
     zig cc -target "$target" -O2 -static -s -Wall -Wextra -Werror \
         "$@" \
-        -o "$out_dir/ab-helper-$name" "$src"
+        -o "$out_dir/ab-helper-$name" "$src" "$root/helper/legacy_task.c"
     chmod 755 "$out_dir/ab-helper-$name"
 }
 

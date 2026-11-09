@@ -103,8 +103,20 @@
   "lang_help_meta": "Solo per intervallo o maschera di rete, per esempio la maschera.",
   "lang_help_progress": "Indicatore di avanzamento solo se lo script viene avviato direttamente come root.",
   "lang_help_debug": "Scrive una riga con la durata in var/perf/last.ndjson.",
-  "lang_help_telemetry": "Con un piccolo rapporto anonimo che AutoBan invia allo sviluppatore, viene tenuta una statistica su quali dispositivi e versioni DSM eseguono il pacchetto. Questo aiuta lo sviluppo.\n\nViene inviato solo questo record:\nModello (es. DS920+)\nVersione DSM (es. 7.2.2)\nBuild DSM (es. 72806)\nVersione AutoBan (es. 1.0.1)\nArchitettura (es. x86_64)\nUID (valore casuale)\n\nL’UID non serve a identificare te o il tuo dispositivo. Serve esclusivamente a far sì che i dati di un’installazione vengano contati una sola volta.",
+  "lang_help_telemetry": "Con un piccolo rapporto anonimo che AutoBan invia allo sviluppatore, viene tenuta una statistica su quali dispositivi e versioni DSM eseguono il pacchetto. Questo aiuta lo sviluppo.\n\nViene inviato solo questo record:\nModello: {device}\nVersione DSM: {dsm}\nBuild DSM: {dsm_build}\nVersione AutoBan: {version}\nArchitettura: {arch}\nUID: {uuid}\nFunziona: {works}\n\nFunziona viene inviato solo dopo Sì o No.\n\nL’UID non serve a identificare te o il tuo dispositivo. Serve esclusivamente a far sì che i dati di un’installazione vengano contati una sola volta.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Errore",
-  "lang_status_recovery": "ripristinato"
+  "lang_status_recovery": "ripristinato",
+  "lang_legacy_task": "L'utilità di pianificazione contiene ancora un'attività attiva che esegue il vecchio script update_blocklist.sh. Si consiglia di disattivarla o eliminarla. Aprire Pannello di controllo → Utilità di pianificazione. Il nome dell'attività è {name}.",
+  "lang_legacy_tasks": "L'utilità di pianificazione contiene ancora attività attive che eseguono il vecchio script update_blocklist.sh. Si consiglia di disattivarle o eliminarle. Aprire Pannello di controllo → Utilità di pianificazione. I nomi delle attività sono {name}.",
+  "lang_works_ask": "AutoBan funziona da te?",
+  "lang_works_yes": "Sì",
+  "lang_works_no": "No",
+  "lang_works_later": "Più tardi",
+  "lang_works_thanks": "Grazie per la segnalazione. Perfetto.",
+  "lang_works_sorry": "Peccato. Una nota su GitHub aiuta.",
+  "lang_works_label": "Segnalazione",
+  "lang_works_state_yes": "funziona",
+  "lang_works_state_no": "non funziona",
+  "lang_works_unset": "non ancora"
 }

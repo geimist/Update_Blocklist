@@ -24,6 +24,18 @@
   </header>
   <div id="run-progress" class="run-progress" aria-hidden="true"></div>
   <main>
+    <div id="works-banner" class="works-banner" hidden>
+      <div class="works-ask">
+        <p data-i18n="lang_works_ask">Läuft AutoBan bei dir?</p>
+        <div class="works-actions">
+          <button type="button" id="works-yes" data-i18n="lang_works_yes">Ja</button>
+          <button type="button" id="works-no" class="ghost" data-i18n="lang_works_no">Nein</button>
+          <button type="button" id="works-later" class="ghost" data-i18n="lang_works_later">Später</button>
+        </div>
+      </div>
+      <span id="works-banner-notice" class="works-notice" role="status"></span>
+    </div>
+    <p id="legacy-task" class="legacy-warn" role="status" hidden></p>
     <section class="howto">
       <h2 data-i18n="lang_section_howto">Funktionsweise</h2>
       <p class="howto-text" data-i18n-html="lang_howto_body">Das Paket <em>AutoBan</em> kapselt Skript <a href="https://github.com/geimist/Update_Blocklist" target="_blank" rel="noopener noreferrer">update_blocklist.sh</a> mit Oberfläche, Zeitplan und einem kleinen setuid-Helfer. AutoBan aktualisiert / importiert von <a href="http://www.blocklist.de/de/index.html" target="_blank" rel="noopener noreferrer">blocklist.de</a> gesperrte IPs in die IP-Blocklist des Synology DSM.</p>
@@ -116,6 +128,13 @@
             <label class="check" hidden><input name="progressbar" type="checkbox"><span data-i18n="lang_progress">Fortschrittsbalken im Standalone-Lauf</span><button type="button" class="info" data-help="lang_help_progress">i</button></label>
             <label class="check wide"><input name="debug_perf" type="checkbox"><span data-i18n="lang_debug">Performance-Protokoll</span><button type="button" class="info" data-help="lang_help_debug">i</button></label>
             <label class="check wide"><input name="telemetry_enabled" type="checkbox"><span data-i18n="lang_telemetry">Anonyme Nutzungsstatistik senden</span><button type="button" class="info" data-help="lang_help_telemetry">i</button></label>
+            <div class="wide works-row">
+              <span data-i18n="lang_works_label">Rückmeldung</span>
+              <strong id="works-state" data-i18n="lang_works_unset">noch keine</strong>
+              <button type="button" id="works-set-yes" class="ghost" data-i18n="lang_works_yes">Ja</button>
+              <button type="button" id="works-set-no" class="ghost" data-i18n="lang_works_no">Nein</button>
+              <span id="works-row-notice" class="works-notice" role="status"></span>
+            </div>
           </div>
         </details>
         <div class="actions">

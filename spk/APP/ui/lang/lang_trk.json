@@ -103,8 +103,20 @@
   "lang_help_meta": "Yalnız aralık veya ağ maskesinde, örneğin maske.",
   "lang_help_progress": "İlerleme yalnız betik doğrudan root olarak çalıştırıldığında.",
   "lang_help_debug": "Çalışma süresiyle bir satırı var/perf/last.ndjson dosyasına yazar.",
-  "lang_help_telemetry": "AutoBan’ın geliştiriciye gönderdiği küçük, anonim bir bildirimle paketin hangi cihazlarda ve DSM sürümlerinde çalıştığına dair istatistik tutulur. Bu, geliştirmeye yardımcı olur.\n\nYalnızca bu kayıt gönderilir:\nModel (ör. DS920+)\nDSM sürümü (ör. 7.2.2)\nDSM derlemesi (ör. 72806)\nAutoBan sürümü (ör. 1.0.1)\nMimari (ör. x86_64)\nUID (rastgele değer)\n\nUID sizi veya cihazınızı tanımlamak için kullanılmaz. Yalnızca bir kurulumun verilerinin bir kez sayılmasını sağlar.",
+  "lang_help_telemetry": "AutoBan’ın geliştiriciye gönderdiği küçük, anonim bir bildirimle paketin hangi cihazlarda ve DSM sürümlerinde çalıştığına dair istatistik tutulur. Bu, geliştirmeye yardımcı olur.\n\nYalnızca bu kayıt gönderilir:\nModel: {device}\nDSM sürümü: {dsm}\nDSM derlemesi: {dsm_build}\nAutoBan sürümü: {version}\nMimari: {arch}\nUID: {uuid}\nÇalışıyor: {works}\n\nÇalışıyor yalnızca Evet veya Hayır seçildikten sonra gönderilir.\n\nUID sizi veya cihazınızı tanımlamak için kullanılmaz. Yalnızca bir kurulumun verilerinin bir kez sayılmasını sağlar.",
   "lang_status_ok": "ok",
   "lang_status_fail": "Hata",
-  "lang_status_recovery": "düzeldi"
+  "lang_status_recovery": "düzeldi",
+  "lang_legacy_task": "Görev Zamanlayıcı'da eski update_blocklist.sh çağrısını çalıştıran etkin bir görev duruyor. Bunu devre dışı bırakmanız veya silmeniz önerilir. Denetim Masası → Görev Zamanlayıcı'yı açın. Görevin adı: {name}.",
+  "lang_legacy_tasks": "Görev Zamanlayıcı'da eski update_blocklist.sh çağrısını çalıştıran etkin görevler duruyor. Bunları devre dışı bırakmanız veya silmeniz önerilir. Denetim Masası → Görev Zamanlayıcı'yı açın. Görevlerin adları: {name}.",
+  "lang_works_ask": "AutoBan sende çalışıyor mu?",
+  "lang_works_yes": "Evet",
+  "lang_works_no": "Hayır",
+  "lang_works_later": "Sonra",
+  "lang_works_thanks": "Bildirim için teşekkürler. Güzel.",
+  "lang_works_sorry": "Üzücü. GitHub’da bir not yardımcı olur.",
+  "lang_works_label": "Geri bildirim",
+  "lang_works_state_yes": "çalışıyor",
+  "lang_works_state_no": "çalışmıyor",
+  "lang_works_unset": "henüz yok"
 }

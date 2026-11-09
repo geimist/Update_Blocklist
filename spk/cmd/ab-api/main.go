@@ -136,6 +136,10 @@ func (s *server) route(w http.ResponseWriter, r *http.Request) {
 		s.handleHistory(w, r)
 	case "status":
 		s.handleStatus(w, r)
+	case "legacy-task":
+		s.handleLegacyTask(w, r)
+	case "telemetry":
+		s.handleTelemetry(w, r)
 	case "log":
 		s.handleLog(w, r)
 	case "backups":
@@ -379,6 +383,44 @@ func (s *server) handleHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"days": points})
+}
+
+type legacyTask struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func parseLegacyTasks(out string) []legacyTask {
+	tasks := []legacyTask{}
+	for _, line := range strings.Split(out, "\n") {
+		line = strings.TrimRight(line, "\r")
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		id, name, ok := strings.Cut(line, "\t")
+		if !ok {
+			continue
+		}
+		id = strings.TrimSpace(id)
+		name = strings.TrimSpace(name)
+		if id == "" {
+			continue
+		}
+		if name == "" {
+			name = id
+		}
+		tasks = append(tasks, legacyTask{ID: id, Name: name})
+	}
+	return tasks
+}
+
+func (s *server) handleLegacyTask(w http.ResponseWriter, r *http.Request) {
+	out, err := s.helperCmd("legacy-task").Output()
+	if err != nil && len(out) == 0 {
+		writeJSON(w, http.StatusOK, map[string]any{"tasks": []legacyTask{}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"tasks": parseLegacyTasks(string(out))})
 }
 
 func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
