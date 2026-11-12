@@ -111,7 +111,7 @@
   "lang_status_recovery": "helyreállítva",
   "lang_legacy_task": "A Feladatütemezőben még van egy aktív feladat a régi update_blocklist.sh hívással. Érdemes kikapcsolni vagy törölni. Nyissa meg a Vezérlőpult → Feladatütemező menüt. A feladat neve: {name}.",
   "lang_legacy_tasks": "A Feladatütemezőben még vannak aktív feladatok a régi update_blocklist.sh hívással. Érdemes kikapcsolni vagy törölni őket. Nyissa meg a Vezérlőpult → Feladatütemező menüt. A feladatok nevei: {name}.",
-  "lang_works_ask": "Működik nálad az AutoBan?",
+  "lang_works_ask": "Működik nálad az AutoBan {version}?",
   "lang_works_yes": "Igen",
   "lang_works_no": "Nem",
   "lang_works_later": "Később",

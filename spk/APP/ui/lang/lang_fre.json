@@ -111,7 +111,7 @@
   "lang_status_recovery": "rétabli",
   "lang_legacy_task": "Le planificateur de tâches contient encore une tâche active qui appelle l'ancien script update_blocklist.sh. Il est recommandé de la désactiver ou de la supprimer. Ouvrez Panneau de configuration → Planificateur de tâches. Le nom de la tâche est {name}.",
   "lang_legacy_tasks": "Le planificateur de tâches contient encore des tâches actives qui appellent l'ancien script update_blocklist.sh. Il est recommandé de les désactiver ou de les supprimer. Ouvrez Panneau de configuration → Planificateur de tâches. Les noms des tâches sont {name}.",
-  "lang_works_ask": "AutoBan fonctionne-t-il chez vous ?",
+  "lang_works_ask": "AutoBan {version} fonctionne-t-il chez vous ?",
   "lang_works_yes": "Oui",
   "lang_works_no": "Non",
   "lang_works_later": "Plus tard",

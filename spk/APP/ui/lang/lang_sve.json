@@ -111,7 +111,7 @@
   "lang_status_recovery": "återställd",
   "lang_legacy_task": "Schemaläggaren har fortfarande en aktiv uppgift som kör det gamla skriptet update_blocklist.sh. Det rekommenderas att inaktivera eller ta bort den. Öppna Kontrollpanel → Schemaläggaren. Uppgiftens namn är {name}.",
   "lang_legacy_tasks": "Schemaläggaren har fortfarande aktiva uppgifter som kör det gamla skriptet update_blocklist.sh. Det rekommenderas att inaktivera eller ta bort dem. Öppna Kontrollpanel → Schemaläggaren. Uppgifternas namn är {name}.",
-  "lang_works_ask": "Fungerar AutoBan hos dig?",
+  "lang_works_ask": "Fungerar AutoBan {version} hos dig?",
   "lang_works_yes": "Ja",
   "lang_works_no": "Nej",
   "lang_works_later": "Senare",

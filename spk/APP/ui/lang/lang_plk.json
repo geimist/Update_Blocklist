@@ -111,7 +111,7 @@
   "lang_status_recovery": "przywrócono",
   "lang_legacy_task": "Harmonogram zadań nadal ma aktywne zadanie, które uruchamia stary skrypt update_blocklist.sh. Warto je wyłączyć lub usunąć. Otwórz Panel sterowania → Harmonogram zadań. Nazwa zadania to {name}.",
   "lang_legacy_tasks": "Harmonogram zadań nadal ma aktywne zadania, które uruchamiają stary skrypt update_blocklist.sh. Warto je wyłączyć lub usunąć. Otwórz Panel sterowania → Harmonogram zadań. Nazwy zadań to {name}.",
-  "lang_works_ask": "Czy AutoBan u Ciebie działa?",
+  "lang_works_ask": "Czy AutoBan {version} u Ciebie działa?",
   "lang_works_yes": "Tak",
   "lang_works_no": "Nie",
   "lang_works_later": "Później",

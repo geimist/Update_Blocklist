@@ -111,7 +111,7 @@
   "lang_status_recovery": "genoprettet",
   "lang_legacy_task": "Opgaveplanlægning har stadig en aktiv opgave, der kører det gamle script update_blocklist.sh. Det anbefales at deaktivere eller slette den. Åbn Kontrolpanel → Opgaveplanlægning. Opgavens navn er {name}.",
   "lang_legacy_tasks": "Opgaveplanlægning har stadig aktive opgaver, der kører det gamle script update_blocklist.sh. Det anbefales at deaktivere eller slette dem. Åbn Kontrolpanel → Opgaveplanlægning. Opgavenes navne er {name}.",
-  "lang_works_ask": "Virker AutoBan hos dig?",
+  "lang_works_ask": "Virker AutoBan {version} hos dig?",
   "lang_works_yes": "Ja",
   "lang_works_no": "Nej",
   "lang_works_later": "Senere",

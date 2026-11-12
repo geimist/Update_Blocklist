@@ -111,7 +111,7 @@
   "lang_status_recovery": "obnoveno",
   "lang_legacy_task": "Plánovač úloh stále obsahuje aktivní úlohu, která spouští starý skript update_blocklist.sh. Doporučujeme ji zakázat nebo smazat. Otevřete Ovládací panel → Plánovač úloh. Název úlohy je {name}.",
   "lang_legacy_tasks": "Plánovač úloh stále obsahuje aktivní úlohy, které spouštějí starý skript update_blocklist.sh. Doporučujeme je zakázat nebo smazat. Otevřete Ovládací panel → Plánovač úloh. Názvy úloh jsou {name}.",
-  "lang_works_ask": "Funguje u vás AutoBan?",
+  "lang_works_ask": "Funguje u vás AutoBan {version}?",
   "lang_works_yes": "Ano",
   "lang_works_no": "Ne",
   "lang_works_later": "Později",

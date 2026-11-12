@@ -111,7 +111,7 @@
   "lang_status_recovery": "recovered",
   "lang_legacy_task": "Task Scheduler still has an active task that runs the old update_blocklist.sh script. You should disable or delete it. Open Control Panel → Task Scheduler. The task name is {name}.",
   "lang_legacy_tasks": "Task Scheduler still has active tasks that run the old update_blocklist.sh script. You should disable or delete them. Open Control Panel → Task Scheduler. The task names are {name}.",
-  "lang_works_ask": "Is AutoBan working for you?",
+  "lang_works_ask": "Is AutoBan {version} working for you?",
   "lang_works_yes": "Yes",
   "lang_works_no": "No",
   "lang_works_later": "Later",

@@ -111,7 +111,7 @@
   "lang_status_recovery": "düzeldi",
   "lang_legacy_task": "Görev Zamanlayıcı'da eski update_blocklist.sh çağrısını çalıştıran etkin bir görev duruyor. Bunu devre dışı bırakmanız veya silmeniz önerilir. Denetim Masası → Görev Zamanlayıcı'yı açın. Görevin adı: {name}.",
   "lang_legacy_tasks": "Görev Zamanlayıcı'da eski update_blocklist.sh çağrısını çalıştıran etkin görevler duruyor. Bunları devre dışı bırakmanız veya silmeniz önerilir. Denetim Masası → Görev Zamanlayıcı'yı açın. Görevlerin adları: {name}.",
-  "lang_works_ask": "AutoBan sende çalışıyor mu?",
+  "lang_works_ask": "AutoBan {version} sende çalışıyor mu?",
   "lang_works_yes": "Evet",
   "lang_works_no": "Hayır",
   "lang_works_later": "Sonra",

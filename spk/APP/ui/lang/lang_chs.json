@@ -111,7 +111,7 @@
   "lang_status_recovery": "已恢复",
   "lang_legacy_task": "DSM 任务计划中仍有一个正在运行的任务，它调用旧的 update_blocklist.sh。建议停用或删除该任务。请打开控制面板 → 任务计划。任务名称为 {name}。",
   "lang_legacy_tasks": "DSM 任务计划中仍有正在运行的任务，它们调用旧的 update_blocklist.sh。建议停用或删除这些任务。请打开控制面板 → 任务计划。任务名称为 {name}。",
-  "lang_works_ask": "AutoBan 在你那里运行正常吗？",
+  "lang_works_ask": "AutoBan {version} 在你那里运行正常吗？",
   "lang_works_yes": "是",
   "lang_works_no": "否",
   "lang_works_later": "稍后",

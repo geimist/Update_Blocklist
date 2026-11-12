@@ -111,7 +111,7 @@
   "lang_status_recovery": "復旧",
   "lang_legacy_task": "タスク スケジューラに、古い update_blocklist.sh を実行する有効なタスクが残っています。無効にするか削除してください。コントロール パネル → タスク スケジューラを開きます。タスク名は {name} です。",
   "lang_legacy_tasks": "タスク スケジューラに、古い update_blocklist.sh を実行する有効なタスクが複数残っています。無効にするか削除してください。コントロール パネル → タスク スケジューラを開きます。タスク名は {name} です。",
-  "lang_works_ask": "AutoBan は動いていますか？",
+  "lang_works_ask": "AutoBan {version} は動いていますか？",
   "lang_works_yes": "はい",
   "lang_works_no": "いいえ",
   "lang_works_later": "あとで",

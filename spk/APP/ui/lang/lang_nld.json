@@ -111,7 +111,7 @@
   "lang_status_recovery": "hersteld",
   "lang_legacy_task": "De taakplanner heeft nog een actieve taak die het oude script update_blocklist.sh uitvoert. Het is aan te raden deze uit te schakelen of te verwijderen. Open Configuratiescherm → Taakplanner. De naam van de taak is {name}.",
   "lang_legacy_tasks": "De taakplanner heeft nog actieve taken die het oude script update_blocklist.sh uitvoeren. Het is aan te raden deze uit te schakelen of te verwijderen. Open Configuratiescherm → Taakplanner. De namen van de taken zijn {name}.",
-  "lang_works_ask": "Werkt AutoBan bij jou?",
+  "lang_works_ask": "Werkt AutoBan {version} bij jou?",
   "lang_works_yes": "Ja",
   "lang_works_no": "Nee",
   "lang_works_later": "Later",

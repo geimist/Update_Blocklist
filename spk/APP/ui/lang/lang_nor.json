@@ -111,7 +111,7 @@
   "lang_status_recovery": "gjenopprettet",
   "lang_legacy_task": "Oppgaveplanleggeren har fortsatt en aktiv oppgave som kjører det gamle skriptet update_blocklist.sh. Det anbefales å deaktivere eller slette den. Åpne Kontrollpanel → Oppgaveplanlegger. Navnet på oppgaven er {name}.",
   "lang_legacy_tasks": "Oppgaveplanleggeren har fortsatt aktive oppgaver som kjører det gamle skriptet update_blocklist.sh. Det anbefales å deaktivere eller slette dem. Åpne Kontrollpanel → Oppgaveplanlegger. Navnene på oppgavene er {name}.",
-  "lang_works_ask": "Virker AutoBan hos deg?",
+  "lang_works_ask": "Virker AutoBan {version} hos deg?",
   "lang_works_yes": "Ja",
   "lang_works_no": "Nei",
   "lang_works_later": "Senere",

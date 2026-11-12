@@ -111,7 +111,7 @@
   "lang_status_recovery": "已復原",
   "lang_legacy_task": "DSM 工作排程中仍有一個執行中的工作，它呼叫舊的 update_blocklist.sh。建議停用或刪除該工作。請開啟控制台 → 工作排程。工作名稱為 {name}。",
   "lang_legacy_tasks": "DSM 工作排程中仍有執行中的工作，它們呼叫舊的 update_blocklist.sh。建議停用或刪除這些工作。請開啟控制台 → 工作排程。工作名稱為 {name}。",
-  "lang_works_ask": "AutoBan 在你那裡運作正常嗎？",
+  "lang_works_ask": "AutoBan {version} 在你那裡運作正常嗎？",
   "lang_works_yes": "是",
   "lang_works_no": "否",
   "lang_works_later": "稍後",

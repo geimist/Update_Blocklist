@@ -111,7 +111,7 @@
   "lang_status_recovery": "ripristinato",
   "lang_legacy_task": "L'utilità di pianificazione contiene ancora un'attività attiva che esegue il vecchio script update_blocklist.sh. Si consiglia di disattivarla o eliminarla. Aprire Pannello di controllo → Utilità di pianificazione. Il nome dell'attività è {name}.",
   "lang_legacy_tasks": "L'utilità di pianificazione contiene ancora attività attive che eseguono il vecchio script update_blocklist.sh. Si consiglia di disattivarle o eliminarle. Aprire Pannello di controllo → Utilità di pianificazione. I nomi delle attività sono {name}.",
-  "lang_works_ask": "AutoBan funziona da te?",
+  "lang_works_ask": "AutoBan {version} funziona da te?",
   "lang_works_yes": "Sì",
   "lang_works_no": "No",
   "lang_works_later": "Più tardi",

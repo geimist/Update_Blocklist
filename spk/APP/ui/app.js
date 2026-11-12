@@ -24,6 +24,7 @@ function applyI18n() {
     el.setAttribute("aria-label", text);
   });
   document.title = t("lang_app_title");
+  fillWorksAsk(telemetryInfo);
   fillTelemetryHelp(telemetryInfo);
 }
 
@@ -140,6 +141,16 @@ function showWorksReaction(kind, fromBanner) {
   }
 }
 
+function worksAskText(info) {
+  const version = (info && info.version) || "";
+  return t("lang_works_ask").split("{version}").join(version).replace(/\s{2,}/g, " ").trim();
+}
+
+function fillWorksAsk(info) {
+  const el = document.querySelector("#works-banner [data-i18n='lang_works_ask']");
+  if (el) el.textContent = worksAskText(info);
+}
+
 function fillTelemetryHelp(info) {
   const btn = document.querySelector('[data-help="lang_help_telemetry"]');
   if (!btn) return;
@@ -162,6 +173,7 @@ function fillTelemetryHelp(info) {
 
 function renderWorks(info, opts) {
   telemetryInfo = info || null;
+  fillWorksAsk(info);
   const keepReaction = !!(opts && opts.keepReaction);
   const banner = document.getElementById("works-banner");
   const ask = banner && banner.querySelector(".works-ask");

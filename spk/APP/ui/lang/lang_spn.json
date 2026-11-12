@@ -111,7 +111,7 @@
   "lang_status_recovery": "restablecido",
   "lang_legacy_task": "El programador de tareas todavía tiene una tarea activa que ejecuta el script antiguo update_blocklist.sh. Se recomienda desactivarla o eliminarla. Abra Panel de control → Programador de tareas. El nombre de la tarea es {name}.",
   "lang_legacy_tasks": "El programador de tareas todavía tiene tareas activas que ejecutan el script antiguo update_blocklist.sh. Se recomienda desactivarlas o eliminarlas. Abra Panel de control → Programador de tareas. Los nombres de las tareas son {name}.",
-  "lang_works_ask": "¿AutoBan te funciona?",
+  "lang_works_ask": "¿AutoBan {version} te funciona?",
   "lang_works_yes": "Sí",
   "lang_works_no": "No",
   "lang_works_later": "Más tarde",
