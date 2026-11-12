@@ -2,6 +2,10 @@ module autoban
 
 go 1.26.0
 
+// Mindestens 1.26.3. Go 1.26.0 bis 1.26.2 stürzt auf Synology-ARM mit Kernel 3.2
+// (armadaxp, z.B. DS214+) in runtime.futexwakeup ab, bevor die Oberfläche antwortet.
+toolchain go1.26.10
+
 require modernc.org/sqlite v1.61.0
 
 require (

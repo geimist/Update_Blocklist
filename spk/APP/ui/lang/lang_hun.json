@@ -3,6 +3,8 @@
   "lang_app_lead": "Automatikusan importálja az IP-tiltólistákat a DSM IP-tiltólistájába.",
   "lang_section_howto": "Működés",
   "lang_howto_body": "Az <em>AutoBan</em> csomag a <a href=\"https://github.com/geimist/Update_Blocklist\" target=\"_blank\" rel=\"noopener noreferrer\">update_blocklist.sh</a> szkriptet felülettel, ütemezéssel és egy kis setuid-segédprogrammal fogja össze. Az AutoBan a <a href=\"http://www.blocklist.de/de/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">blocklist.de</a> tiltott IP-címeit frissíti és importálja a Synology DSM IP-tiltólistájába.",
+  "lang_qc_note": "Megjegyzés a QuickConnecthez",
+  "lang_help_qc": "QuickConnect-relé: az ügyfél IP-címe rejtve marad. A DSM tűzfala és a GeoIP ezen az úton nem érvényes. Megoldás: a QuickConnect → Speciális beállítások alatt kapcsolja ki a DSM-hozzáférést. A mobilalkalmazások, a Drive és a fájlmegosztás továbbra is használható.",
   "lang_source_visit": "A blocklist.de megnyitása",
   "lang_buttonreload": "Frissítés",
   "lang_buttonsave": "Mentés",

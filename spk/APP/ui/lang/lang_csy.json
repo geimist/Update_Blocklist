@@ -3,6 +3,8 @@
   "lang_app_lead": "Automaticky importuje seznamy blokování IP do seznamu blokování IP v DSM.",
   "lang_section_howto": "Jak to funguje",
   "lang_howto_body": "Balíček <em>AutoBan</em> obaluje skript <a href=\"https://github.com/geimist/Update_Blocklist\" target=\"_blank\" rel=\"noopener noreferrer\">update_blocklist.sh</a> rozhraním, plánem a malým pomocníkem setuid. AutoBan aktualizuje a importuje blokované IP z <a href=\"http://www.blocklist.de/de/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">blocklist.de</a> do seznamu blokování IP v Synology DSM.",
+  "lang_qc_note": "Poznámka k QuickConnect",
+  "lang_help_qc": "Relé QuickConnect: IP klienta zůstává skrytá. Firewall DSM a GeoIP na této cestě neplatí. Řešení: v QuickConnect → Pokročilá nastavení vypněte přístup k DSM. Mobilní aplikace, Drive a sdílení souborů zůstávají použitelné.",
   "lang_source_visit": "Navštívit blocklist.de",
   "lang_buttonreload": "Obnovit",
   "lang_buttonsave": "Uložit",

@@ -3,6 +3,8 @@
   "lang_app_lead": "IP 차단 목록을 DSM IP 차단 목록으로 자동으로 가져옵니다.",
   "lang_section_howto": "작동 방식",
   "lang_howto_body": "패키지 <em>AutoBan</em>은 스크립트 <a href=\"https://github.com/geimist/Update_Blocklist\" target=\"_blank\" rel=\"noopener noreferrer\">update_blocklist.sh</a>를 화면, 일정, 작은 setuid 도우미와 함께 묶습니다. AutoBan은 <a href=\"http://www.blocklist.de/de/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">blocklist.de</a>의 차단된 IP를 업데이트하고 가져와 Synology DSM의 IP 차단 목록에 넣습니다.",
+  "lang_qc_note": "QuickConnect 관련 안내",
+  "lang_help_qc": "QuickConnect 릴레이에서는 클라이언트 IP가 숨겨집니다. 그 경로에서는 DSM 방화벽과 GeoIP가 적용되지 않습니다. 해결: QuickConnect → 고급 설정에서 DSM 접근을 끄세요. 모바일 앱, Drive, 파일 공유는 계속 사용할 수 있습니다.",
   "lang_source_visit": "blocklist.de 방문",
   "lang_buttonreload": "새로 고침",
   "lang_buttonsave": "저장",

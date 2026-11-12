@@ -137,6 +137,15 @@ label.wide, details, .actions, .settings-grid { grid-column: 1 / -1; }
 .howto-text { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
 .howto-text a { color: var(--navy); }
 .howto-text em { font-style: italic; color: var(--ink); }
+.howto-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
 .settings-grid {
   display: grid;
   grid-template-columns: auto minmax(12rem, 1fr) 15rem;

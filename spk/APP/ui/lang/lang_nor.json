@@ -3,6 +3,8 @@
   "lang_app_lead": "Importerer automatisk IP-blokkeringslister til DSMs IP-blokkeringsliste.",
   "lang_section_howto": "Slik virker det",
   "lang_howto_body": "Pakken <em>AutoBan</em> pakker inn skriptet <a href=\"https://github.com/geimist/Update_Blocklist\" target=\"_blank\" rel=\"noopener noreferrer\">update_blocklist.sh</a> med et grensesnitt, en tidsplan og en liten setuid-hjelper. AutoBan oppdaterer og importerer blokkerte IP-adresser fra <a href=\"http://www.blocklist.de/de/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">blocklist.de</a> til IP-blokkeringslisten i Synology DSM.",
+  "lang_qc_note": "Merknad om QuickConnect",
+  "lang_help_qc": "QuickConnect-relay: klient-IP-en forblir skjult. DSM-brannmur og GeoIP gjelder ikke på den veien. Løsning: under QuickConnect → Avanserte innstillinger, slå av DSM-tilgang. Mobilapper, Drive og fildeling kan fortsatt brukes.",
   "lang_source_visit": "Besøk blocklist.de",
   "lang_buttonreload": "Oppdater",
   "lang_buttonsave": "Lagre",

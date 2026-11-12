@@ -3,6 +3,8 @@
   "lang_app_lead": "IP engelleme listelerini otomatik olarak DSM IP engelleme listesine aktarır.",
   "lang_section_howto": "Nasıl çalışır",
   "lang_howto_body": "<em>AutoBan</em> paketi, <a href=\"https://github.com/geimist/Update_Blocklist\" target=\"_blank\" rel=\"noopener noreferrer\">update_blocklist.sh</a> betiğini bir arayüz, bir zamanlama ve küçük bir setuid yardımcısıyla sarar. AutoBan, <a href=\"http://www.blocklist.de/de/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">blocklist.de</a> üzerindeki engellenen IP'leri günceller ve Synology DSM IP engelleme listesine aktarır.",
+  "lang_qc_note": "QuickConnect hakkında not",
+  "lang_help_qc": "QuickConnect rölesi: istemci IP’si gizli kalır. DSM güvenlik duvarı ve GeoIP bu yolda uygulanmaz. Çözüm: QuickConnect → Gelişmiş ayarlar altında DSM erişimini kapatın. Mobil uygulamalar, Drive ve dosya paylaşımı kullanılabilir kalır.",
   "lang_source_visit": "blocklist.de sitesini aç",
   "lang_buttonreload": "Yenile",
   "lang_buttonsave": "Kaydet",

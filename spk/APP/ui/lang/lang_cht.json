@@ -3,6 +3,8 @@
   "lang_app_lead": "自動將 IP 封鎖清單匯入 DSM 的 IP 封鎖清單。",
   "lang_section_howto": "運作方式",
   "lang_howto_body": "套件 <em>AutoBan</em> 將指令碼 <a href=\"https://github.com/geimist/Update_Blocklist\" target=\"_blank\" rel=\"noopener noreferrer\">update_blocklist.sh</a> 與介面、排程和一個小型 setuid 協助程式包裝在一起。AutoBan 會更新並匯入 <a href=\"http://www.blocklist.de/de/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">blocklist.de</a> 上被封鎖的 IP，寫入 Synology DSM 的 IP 封鎖清單。",
+  "lang_qc_note": "關於 QuickConnect 的說明",
+  "lang_help_qc": "QuickConnect 中繼會隱藏用戶端 IP。DSM 防火牆與 GeoIP 對該路徑無效。解決方法：在 QuickConnect → 進階設定中關閉 DSM 存取。行動應用程式、Drive 與檔案共用仍可使用。",
   "lang_source_visit": "造訪 blocklist.de",
   "lang_buttonreload": "重新整理",
   "lang_buttonsave": "儲存",

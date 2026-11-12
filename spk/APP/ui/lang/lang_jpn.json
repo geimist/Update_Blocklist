@@ -3,6 +3,8 @@
   "lang_app_lead": "IP ブロックリストを DSM の IP ブロックリストへ自動的に取り込みます。",
   "lang_section_howto": "動作",
   "lang_howto_body": "パッケージ <em>AutoBan</em> は、スクリプト <a href=\"https://github.com/geimist/Update_Blocklist\" target=\"_blank\" rel=\"noopener noreferrer\">update_blocklist.sh</a> を画面、スケジュール、小さな setuid ヘルパーとともにまとめます。AutoBan は <a href=\"http://www.blocklist.de/de/index.html\" target=\"_blank\" rel=\"noopener noreferrer\">blocklist.de</a> のブロック済み IP を更新して取り込み、Synology DSM の IP ブロックリストに入れます。",
+  "lang_qc_note": "QuickConnect についての注意",
+  "lang_help_qc": "QuickConnect リレーではクライアント IP が隠されます。その経路では DSM ファイアウォールと GeoIP は効きません。対処：QuickConnect → 詳細設定で DSM アクセスをオフにしてください。モバイルアプリ、Drive、ファイル共有はそのまま使えます。",
   "lang_source_visit": "blocklist.de を開く",
   "lang_buttonreload": "更新",
   "lang_buttonsave": "保存",

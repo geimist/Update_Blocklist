@@ -1,3 +1,6 @@
+1.0.3 [2026-11-12]
+    ● Rebuild the UI with Go 1.26.10. Go 1.26.0 crashes on armadaxp (DS214+, kernel 3.2) before the page is served.
+
 1.0.2 [2026-11-09]
     ● The system database update has been optimized to prevent a theoretical short window of vulnerability between the deletion of expired IPs and the creation of new ones.
     ● check & notify for legacy tasks (update_blocklist.sh)
