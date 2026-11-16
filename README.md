@@ -39,3 +39,5 @@ Nach der Installation im Paketzentrum besteht folgender Zustand:
 Bei einer Neuinstallation sendet AutoBan einmal im Monat eine anonyme Nutzungsstatistik (UID, Modell, DSM-Version, DSM-Build, AutoBan-Version, Architektur). Die UID dient nur dazu, eine Installation eindeutig zu zählen. Unter Einstellungen → Erweitert lässt sich das abschalten. Ein Update einer bestehenden Installation schaltet die Statistik nicht ein. Dieselbe Meldung kann dort zusätzlich mit Ja oder Nein sagen, ob AutoBan läuft; die Infobox zeigt die Werte dieser Installation.
 
 Ein bisher per Aufgabenplaner gestartetes Root-Skript kann entfallen, sobald das Paket läuft. Die Standalone-Nutzung des Skripts bleibt möglich.
+
+<img width="926" height="614" alt="AutoBan" src="https://github.com/geimist/Update_Blocklist/blob/master/images/AutoBan_GUI.png?raw=true" />
