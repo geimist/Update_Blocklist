@@ -1,5 +1,7 @@
 #!/bin/sh
 # Packt AutoBan_<version>.spk
+# ./build_spk.sh 1.0.0
+
 set -eu
 root=$(cd "$(dirname "$0")" && pwd)
 repo=$(cd "$root/.." && pwd)

@@ -1,2 +1,2 @@
-1.0.3 [2026-11-12]
-    ● Rebuild the UI with Go 1.26.10. Go 1.26.0 crashes on armadaxp (DS214+, kernel 3.2) before the page is served.
+1.1.0 [2026-11-17]
+    ● initial public release
